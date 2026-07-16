@@ -1,0 +1,15 @@
+{
+  "name": "@parrot/widget",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --minify --outfile=dist/widget.js"
+  },
+  "dependencies": {
+    "@parrot/sdk": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0"
+  }
+}
