@@ -10,25 +10,30 @@ This is an early-stage / internal project. Expect gaps — sections below are ma
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    Visitor["Visitor<br>(customer site)"]
+    Member["Tenant Member<br>(admin/agent)"]
+    
+    Widget["apps/widget<br>(vanilla JS)"]
+    Web["apps/web<br>(dashboard + website)"]
+    
+    SDK["packages/sdk<br>(typed HTTP client)"]
+    API["apps/api<br>(Express + TypeScript)"]
+    DB["packages/db<br>(Drizzle ORM)"]
+    Postgres[(PostgreSQL)]
+
+    Visitor --> Widget
+    Member --> Web
+    
+    Widget --> SDK
+    Web --> SDK
+    
+    SDK --> API
+    API --> DB
+    DB --> Postgres
 ```
-Visitor (customer site)          Tenant Member (admin/agent)
-        │                                  │
-        ▼                                  ▼
-  apps/widget  ──────┐          apps/web (dashboard + website)
-  (vanilla JS)       │                  │
-                      │                  │
-                      ▼                  ▼
-                 packages/sdk (typed HTTP client)
-                      │
-                      ▼
-                 apps/api (Express + TypeScript)
-                      │
-                      ▼
-                 packages/db (Drizzle ORM)
-                      │
-                      ▼
-                   PostgreSQL
-```
+
 
 - `apps/widget` and `apps/web` never talk to the database directly — everything routes through `apps/api`.
 - `packages/sdk` is the only sanctioned way `web`/`widget` call the API.
