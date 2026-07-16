@@ -241,7 +241,3 @@ Turborepo builds each package/app in dependency order (`packages/db` → `packag
 - [`docs/adr`](./docs/adr) — architecture decision records
 - [`docs/diagrams`](./docs/diagrams) — schema and flow diagrams
 - [`docs/api`](./docs/api) — API reference
-
-## License
-
-See [`LICENSE`](./LICENSE).
