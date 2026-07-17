@@ -6,7 +6,6 @@
   "types": "./src/index.ts",
   "scripts": { "build": "tsc" },
   "dependencies": {
-    "@parrot/shared-types": "workspace:*"
   },
   "devDependencies": { "typescript": "^5.6.0" }
 }

@@ -1,1 +1,14 @@
-export {}
+export type {
+  Tenant,
+  Role,
+  User,
+  Session,
+  Account,
+  Permission,
+  RolePermission,
+  Visitor,
+  Conversation,
+  Message,
+  Ticket,
+  Invite,
+} from "./schema";
