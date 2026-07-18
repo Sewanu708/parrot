@@ -13,7 +13,6 @@ import type {
   RequestComponents,
   RequestAugments,
   HandlerResult,
-  HandlerFunction,
   ResponseComponents,
   HandlerConfiguration,
   HandlerExecutionContext,
@@ -31,7 +30,7 @@ export type {
   HttpMethod,
 } from "./types";
 
-function Server(serverConfig: { port: number; enableCors?: boolean }) {
+function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
   const app = express();
   const errorCodeMappings = ERROR_STATUS_CODE_MAPPING;
 
@@ -298,4 +297,4 @@ function Server(serverConfig: { port: number; enableCors?: boolean }) {
   };
 }
 
-export { Server };
+export { createServer };

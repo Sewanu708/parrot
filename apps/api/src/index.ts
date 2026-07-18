@@ -1,7 +1,9 @@
-// apps/api/src/index.ts
-import express from "express";
+import { createServer } from "./express/server";
 
-const app = express();
-app.get("/health", (_req, res) => res.json({ ok: true }));
+const server = createServer({
+  port: Number(process.env.PORT),
+  enableCors: true,
+});
 
-app.listen(3001, () => console.log("api running on :3001"));
+
+server.startServer()

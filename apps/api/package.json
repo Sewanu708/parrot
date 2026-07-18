@@ -8,10 +8,15 @@
   },
   "dependencies": {
     "@parrot/db": "workspace:*",
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
+    "crypto": "^1.0.1",
     "express": "^4.21.0",
+    "handlebars": "^4.7.9",
     "pino": "^10.3.1",
-    "request-ip": "^3.3.0"
+    "request-ip": "^3.3.0",
+    "resend": "^6.17.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

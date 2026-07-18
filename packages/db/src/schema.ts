@@ -53,6 +53,12 @@ export const inviteStatusEnum = pgEnum("invite_status", [
   "revoked",
 ]);
 
+export const tokenTypeEnum = pgEnum("token_type", [
+  "email_verification",
+  "password_reset",
+  "magic_link"
+]);
+
 export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -115,6 +121,26 @@ export const users = pgTable(
     uniqueIndex("uq_users_tenant_email").on(table.tenantId, table.email),
     index("idx_users_tenant_id").on(table.tenantId),
     index("idx_users_role_id").on(table.roleId),
+  ],
+);
+
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: text("token").notNull().unique(),
+    type: tokenTypeEnum("type").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_verification_tokens_user_id").on(table.userId),
+    index("idx_verification_tokens_token").on(table.token),
   ],
 );
 
@@ -371,3 +397,4 @@ export type Conversation = InferSelectModel<typeof conversations>;
 export type Message = InferSelectModel<typeof messages>;
 export type Ticket = InferSelectModel<typeof tickets>;
 export type Invite = InferSelectModel<typeof invites>;
+export type VerificationToken = InferSelectModel<typeof verificationTokens>;

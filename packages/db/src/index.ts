@@ -11,4 +11,5 @@ export type {
   Message,
   Ticket,
   Invite,
+  VerificationToken,
 } from "./schema";
