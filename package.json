@@ -4,10 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "docker compose up -d && turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "db:generate": "pnpm --filter @parrot/db generate",
+    "db:push": "pnpm --filter @parrot/db push",
+    "db:studio": "pnpm --filter @parrot/db studio",
+    "docker:down": "docker compose down"
   },
-  "keywords": [],
-  "author": "",
+  "devDependencies": {
+    "turbo": "^2.1.2"
+  },
   "license": "ISC",
   "devEngines": {
     "packageManager": {

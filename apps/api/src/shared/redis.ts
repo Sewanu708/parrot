@@ -7,7 +7,7 @@ export class RedisService {
   private isReady = false; // Track connection status
 
   constructor() {
-    const dbUrl = env.REDIS_URL || "redis://localhost:6379";
+    const dbUrl = env.REDIS_URL || "redis://127.0.0.1:6380";
     if (!dbUrl) throw new Error("Misconfigured Redis, halting.");
 
     this.redis = new Redis(dbUrl);
@@ -18,12 +18,12 @@ export class RedisService {
     });
 
     this.redis.on("connect", () => {
-      logger.info("IoRedis connected!");
+      // logger.info("IoRedis connected!");
       this.isReady = true;
     });
 
     this.redis.on("reconnecting", (delay: number) => {
-      logger.warn(`IoRedis reconnecting... next retry in ${delay}ms`);
+      // logger.warn(`IoRedis reconnecting... next retry in ${delay}ms`);
     });
 
     this.redis.on("end", () => {

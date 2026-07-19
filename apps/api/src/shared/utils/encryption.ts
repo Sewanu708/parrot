@@ -5,6 +5,7 @@ import {
   createDecipheriv,
   randomBytes,
   randomInt,
+  createHash,
 } from "crypto";
 import bcrypt from "bcrypt";
 
@@ -14,12 +15,13 @@ const TAG_LEN = 16;
 const DEFAULT_RANDOM =
   "QW5df3dgx2h9j9_Y23243565reubdjcqfz8gb3nqmLZXCVBNM0123%##U_U(!@U]-i32e9#$@";
 
-function getKey() {
+function getKey(): Buffer {
   const secret = process.env.ENCRYPTION_KEY;
   if (!secret) {
     appError("Encryption key not set", ERROR_CODE.INVLDDATA);
   }
-  return secret;
+  // aes-256-gcm requires exactly 32 bytes. Hashing ensures any string length works securely.
+  return createHash("sha256").update(secret).digest();
 }
 
 export function encryptText(plainText: string): string {

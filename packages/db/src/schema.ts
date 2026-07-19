@@ -17,6 +17,7 @@ export const userStatusEnum = pgEnum("user_status", [
   "invited",
   "active",
   "suspended",
+  "pending"
 ]);
 
 export const conversationStatusEnum = pgEnum("conversation_status", [
@@ -58,6 +59,9 @@ export const inviteStatusEnum = pgEnum("invite_status", [
 export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
+  domain: text("domain"),
+  supportEmail: text("support_email"),
+  brandColor: text("brand_color"),
   logoUrl: text("logo_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -96,7 +100,7 @@ export const users = pgTable(
     name: text("name").notNull(),
     email: text("email").notNull().unique(), // use citext extension at DB level
     emailVerified: boolean("email_verified").notNull().default(false),
-    status: userStatusEnum("status").notNull().default("invited"),
+    status: userStatusEnum("status").notNull().default("pending"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })

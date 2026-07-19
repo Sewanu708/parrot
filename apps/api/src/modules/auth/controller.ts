@@ -35,11 +35,12 @@ export class AuthController {
       hashedPassword,
     );
 
-    const verificationToken = randomBytes(32).toString("hex");
-    await redisClient.set(`verify_email:${verificationToken}`, email, { ttl: 86400000 }); // 24 hours in ms
+    const expiresAt = Date.now() + ONE_DAY;
+    const rawToken = `${generateRandomStr(4)}::${email}::${generateRandomStr(4)}::${expiresAt}`;
+    const verificationToken = encryptText(rawToken);
 
     // 5. Send Verification Email
-    await EmailService.sendEmail({
+    void EmailService.sendEmail({
       to: newUser.email,
       subject: `Verify your email address - ${PRODUCT_NAME}`,
       template: EmailTemplate.VERIFICATION,
@@ -60,17 +61,15 @@ export class AuthController {
       appError("Verification token is missing.", ERROR_CODE.INVLDREQ);
     }
 
-    const email = await redisClient.get<string>(`verify_email:${token}`);
-    if (!email) {
+    const { email, expiresAt } = decodeVerificationToken(token);
+
+    if (Date.now() > expiresAt) {
       appError(
-        "Verification link is invalid or has expired. Please request a new one.",
+        "Verification link has expired. Please request a new one.",
         ERROR_CODE.INVLDREQ,
-        { code: "SL04" }
+        { code: "SL04" },
       );
     }
-
-    // Single-use: burn the token!
-    await redisClient.del(`verify_email:${token}`);
 
     const user = await AuthRepository.getUserByEmail(email);
     if (!user) {
@@ -94,7 +93,9 @@ export class AuthController {
     };
   }
 
-  static async login(req: RequestComponents): Promise<HandlerResult<LoginResponse>> {
+  static async login(
+    req: RequestComponents,
+  ): Promise<HandlerResult<LoginResponse>> {
     const { email, password } = req.body;
     const { IP, userAgent } = req.properties;
 
@@ -110,7 +111,7 @@ export class AuthController {
       appError(
         "This email is linked to a different sign-in method.",
         ERROR_CODE.AUTHERR,
-        { code: "SL06" }
+        { code: "SL06" },
       );
     }
 
@@ -160,21 +161,31 @@ export class AuthController {
     };
   }
 
-  static async resendVerificationEmail(req: RequestComponents): Promise<HandlerResult<SuccessResponse>> {
+  static async resendVerificationEmail(
+    req: RequestComponents,
+  ): Promise<HandlerResult<SuccessResponse>> {
     const { email } = req.body;
     const user = await AuthRepository.getUserByEmail(email);
 
     if (!user) {
       // Return success even if not found to prevent enumeration
-      return { status: 200, message: "If your email is registered, a verification link has been sent.", data: { message: "Success" } };
+      return {
+        status: 200,
+        message:
+          "If your email is registered, a verification link has been sent.",
+        data: { message: "Success" },
+      };
     }
 
     if (user.emailVerified) {
-      appError("Email is already verified", ERROR_CODE.INVLDREQ, { code: "SL01" });
+      appError("Email is already verified", ERROR_CODE.INVLDREQ, {
+        code: "SL01",
+      });
     }
 
-    const verificationToken = randomBytes(32).toString("hex");
-    await redisClient.set(`verify_email:${verificationToken}`, email, { ttl: 86400000 }); // 24 hours in ms
+    const expiresAt = Date.now() + ONE_DAY;
+    const rawToken = `${generateRandomStr(4)}::${email}::${generateRandomStr(4)}::${expiresAt}`;
+    const verificationToken = encryptText(rawToken);
 
     await EmailService.sendEmail({
       to: email,
@@ -183,21 +194,34 @@ export class AuthController {
       context: { name: user.name, hash: verificationToken },
     });
 
-    return { status: 200, message: "Verification email sent.", data: { message: "Success" } };
+    return {
+      status: 200,
+      message: "Verification email sent.",
+      data: { message: "Success" },
+    };
   }
 
-  static async forgotPassword(req: RequestComponents): Promise<HandlerResult<SuccessResponse>> {
+  static async forgotPassword(
+    req: RequestComponents,
+  ): Promise<HandlerResult<SuccessResponse>> {
     const { email } = req.body;
     const data = await AuthRepository.getUserWithPassword(email);
 
     if (!data) {
       // Prevent enumeration
-      return { status: 200, message: "If your email is registered, a password reset link has been sent.", data: { message: "Success" } };
+      return {
+        status: 200,
+        message:
+          "If your email is registered, a password reset link has been sent.",
+        data: { message: "Success" },
+      };
     }
 
     const resetCode = String(randomInt(100000, 999999));
-    
-    await redisClient.set(`reset_password:${resetCode}`, email, { ttl: 900000 }); // 15 mins in ms
+
+    await redisClient.set(`reset_password:${resetCode}`, email, {
+      ttl: 900000,
+    }); // 15 mins in ms
 
     await EmailService.sendEmail({
       to: email,
@@ -206,15 +230,23 @@ export class AuthController {
       context: { name: data.user.name, code: resetCode, expiresInMins: 15 },
     });
 
-    return { status: 200, message: "Password reset email sent.", data: { message: "Success" } };
+    return {
+      status: 200,
+      message: "Password reset email sent.",
+      data: { message: "Success" },
+    };
   }
 
-  static async resetPassword(req: RequestComponents): Promise<HandlerResult<SuccessResponse>> {
+  static async resetPassword(
+    req: RequestComponents,
+  ): Promise<HandlerResult<SuccessResponse>> {
     const { token, password } = req.body;
 
     const email = await redisClient.get<string>(`reset_password:${token}`);
     if (!email) {
-      appError("Invalid or expired reset code.", ERROR_CODE.INVLDREQ, { code: "SL01" });
+      appError("Invalid or expired reset code.", ERROR_CODE.INVLDREQ, {
+        code: "SL01",
+      });
     }
 
     // Burn the code so it can never be used again
@@ -228,6 +260,10 @@ export class AuthController {
     const newPasswordHash = await hashPassword(password);
     await AuthRepository.updatePassword(data.user.id, newPasswordHash);
 
-    return { status: 200, message: "Password has been successfully reset.", data: { message: "Success" } };
+    return {
+      status: 200,
+      message: "Password has been successfully reset.",
+      data: { message: "Success" },
+    };
   }
 }

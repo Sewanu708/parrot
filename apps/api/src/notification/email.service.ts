@@ -7,8 +7,6 @@ import * as hbs from "handlebars";
 import { join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 
-const resend = new Resend(env.RESEND_API_KEY);
-
 const DEFAULT_FROM_EMAIL =
   env.DEFAULT_FROM_EMAIL || "Parrot <noreply@yourdomain.com>";
 
@@ -44,6 +42,7 @@ export enum EmailTemplate {
 }
 
 export class EmailService {
+  private static resend = new Resend(env.RESEND_KEY);
   private static logoUrl =
     "https://bxhoiovlk4.ufs.sh/f/gJvTMDqMASDhk7KRySlfgWKnPdNbvXtpsMc4Z67OAm93LUBY";
   private static resolveTemplatePath(filename: string): string {
@@ -135,9 +134,10 @@ export class EmailService {
         );
       }
 
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await this.resend.emails.send({
         from: DEFAULT_FROM_EMAIL,
-        to: Array.isArray(options.to) ? options.to : [options.to],
+        // to: Array.isArray(options.to) ? options.to : [options.to],
+        to: "sewanu708@gmail.com",
         subject: options.subject,
         html: htmlBody,
         text: textBody,
