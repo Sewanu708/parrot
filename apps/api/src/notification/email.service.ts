@@ -2,13 +2,12 @@ import { Resend } from "resend";
 import { logger } from "../logger";
 import { appError } from "../express/errors";
 import { ERROR_CODE } from "../express/constant";
-import { env } from "node:process";
+import { env } from "@parrot/db/src/env";
 import * as hbs from "handlebars";
 import { join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 
-const DEFAULT_FROM_EMAIL =
-  env.DEFAULT_FROM_EMAIL || "Parrot <noreply@yourdomain.com>";
+const DEFAULT_FROM_EMAIL = env.DEFAULT_FROM_EMAIL;
 
 export type SendEmailOptions = {
   to: string | string[];
@@ -80,7 +79,7 @@ export class EmailService {
     switch (template) {
       case EmailTemplate.VERIFICATION:
         const ctx = context as AUTH_VERIFICATION;
-        const frontend_url = process.env.FRONTEND_URL;
+        const frontend_url = env.FRONTEND_URL;
         if (!frontend_url) {
           appError("Failed to send email", ERROR_CODE.INVLDDATA, {
             code: "SL00",

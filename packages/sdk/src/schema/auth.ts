@@ -42,6 +42,13 @@ export interface LoginResponse {
     name: string;
     email: string;
   };
+  tenants: {
+    id: string;
+    name: string;
+    domain: string | null;
+    logoUrl: string | null;
+  }[];
+  lastActiveTenantId: string | null;
 }
 
 export interface BaseApiResponse<T = any> {

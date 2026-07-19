@@ -1,5 +1,5 @@
 import { Redis } from "ioredis";
-import { env } from "node:process";
+import { env } from "@parrot/db/src/env";
 import { logger } from "../logger";
 
 export class RedisService {
@@ -7,7 +7,7 @@ export class RedisService {
   private isReady = false; // Track connection status
 
   constructor() {
-    const dbUrl = env.REDIS_URL || "redis://127.0.0.1:6380";
+    const dbUrl = env.REDIS_URL;
     if (!dbUrl) throw new Error("Misconfigured Redis, halting.");
 
     this.redis = new Redis(dbUrl);

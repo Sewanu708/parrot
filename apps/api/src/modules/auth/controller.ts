@@ -135,6 +135,11 @@ export class AuthController {
       );
     }
 
+    const [userTenants, lastActiveTenantId] = await Promise.all([
+      AuthRepository.getUserTenants(user.id),
+      AuthRepository.getLastActiveTenantId(user.id),
+    ]);
+
     // Create session token
     const sessionToken = randomBytes(32).toString("hex");
     const sessionExpiresAt = new Date(Date.now() + ONE_DAY * 30); // 30 days
@@ -145,6 +150,7 @@ export class AuthController {
       sessionExpiresAt,
       IP || undefined,
       userAgent,
+      lastActiveTenantId
     );
 
     return {
@@ -157,6 +163,8 @@ export class AuthController {
           name: user.name,
           email: user.email,
         },
+        tenants: userTenants,
+        lastActiveTenantId,
       },
     };
   }

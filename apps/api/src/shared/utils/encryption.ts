@@ -8,6 +8,7 @@ import {
   createHash,
 } from "crypto";
 import bcrypt from "bcrypt";
+import { env } from "@parrot/db/src/env";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LEN = 16;
@@ -16,7 +17,7 @@ const DEFAULT_RANDOM =
   "QW5df3dgx2h9j9_Y23243565reubdjcqfz8gb3nqmLZXCVBNM0123%##U_U(!@U]-i32e9#$@";
 
 function getKey(): Buffer {
-  const secret = process.env.ENCRYPTION_KEY;
+  const secret = env.ENCRYPTION_KEY;
   if (!secret) {
     appError("Encryption key not set", ERROR_CODE.INVLDDATA);
   }

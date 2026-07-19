@@ -1,6 +1,6 @@
 import { db } from "@parrot/db/src/config";
-import { users, accounts, sessions } from "@parrot/db/src/schema";
-import { eq } from "drizzle-orm";
+import { users, accounts, sessions, tenants, tenantMembers } from "@parrot/db/src/schema";
+import { eq, and, isNotNull, desc } from "drizzle-orm";
 
 export class AuthRepository {
   static async getUserByEmail(email: string) {
@@ -57,7 +57,8 @@ export class AuthRepository {
     token: string,
     expiresAt: Date,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
+    activeTenantId?: string | null
   ) {
     const [session] = await db
       .insert(sessions)
@@ -67,9 +68,33 @@ export class AuthRepository {
         expiresAt,
         ipAddress,
         userAgent,
+        activeTenantId,
       })
       .returning();
     return session;
+  }
+
+  static async getUserTenants(userId: string) {
+    return db
+      .select({
+        id: tenants.id,
+        name: tenants.name,
+        domain: tenants.domain,
+        logoUrl: tenants.logoUrl,
+      })
+      .from(tenantMembers)
+      .innerJoin(tenants, eq(tenantMembers.tenantId, tenants.id))
+      .where(eq(tenantMembers.userId, userId));
+  }
+
+  static async getLastActiveTenantId(userId: string) {
+    const [session] = await db
+      .select({ activeTenantId: sessions.activeTenantId })
+      .from(sessions)
+      .where(and(eq(sessions.userId, userId), isNotNull(sessions.activeTenantId)))
+      .orderBy(desc(sessions.createdAt))
+      .limit(1);
+    return session?.activeTenantId || null;
   }
 
   static async updatePassword(userId: string, passwordHash: string) {
