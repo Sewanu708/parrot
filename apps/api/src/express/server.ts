@@ -2,7 +2,7 @@ import express, { NextFunction } from "express";
 import { Request, Response } from "express";
 import { logger } from "../logger";
 import { env } from "node:process";
-import { ERROR_STATUS_CODE_MAPPING, HTTPStatusCode } from "./constant";
+import {   HTTPStatusCode } from "./constant";
 import cors from "cors";
 import { getClientIp } from "request-ip";
 import { AppError } from "./errors";
@@ -32,7 +32,6 @@ export type {
 
 function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
   const app = express();
-  const errorCodeMappings = ERROR_STATUS_CODE_MAPPING;
 
   const { port = 8080, enableCors } = serverConfig;
 

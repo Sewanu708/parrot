@@ -8,15 +8,19 @@
   },
   "dependencies": {
     "@parrot/db": "workspace:*",
+    "@parrot/sdk": "workspace:*",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "crypto": "^1.0.1",
+    "drizzle-orm": "1.0.0-rc.4",
     "express": "^4.21.0",
     "handlebars": "^4.7.9",
+    "ioredis": "^5.11.1",
     "pino": "^10.3.1",
     "request-ip": "^3.3.0",
-    "resend": "^6.17.2"
+    "resend": "^6.17.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

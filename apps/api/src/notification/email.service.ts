@@ -18,7 +18,7 @@ export type SendEmailOptions = {
   html?: string;
   text?: string;
   template?: EmailTemplate;
-  context?: AUTH_VERIFICATION;
+  context?: AUTH_VERIFICATION | AUTH_PASSWORD_RESET | AUTH_PASSWORD_RESET_CODE;
 };
 
 export type AUTH_VERIFICATION = {
@@ -26,12 +26,26 @@ export type AUTH_VERIFICATION = {
   hash: string;
 };
 
+export type AUTH_PASSWORD_RESET = {
+  name: string;
+  hash: string;
+};
+
+export type AUTH_PASSWORD_RESET_CODE = {
+  name: string;
+  code: string;
+  expiresInMins: number;
+};
+
 export enum EmailTemplate {
   VERIFICATION = "AUTH_VERIFICATION",
+  PASSWORD_RESET = "AUTH_PASSWORD_RESET",
+  PASSWORD_RESET_CODE = "AUTH_PASSWORD_RESET_CODE",
 }
 
 export class EmailService {
-  private static logoUrl = "https://bxhoiovlk4.ufs.sh/f/gJvTMDqMASDhk7KRySlfgWKnPdNbvXtpsMc4Z67OAm93LUBY";
+  private static logoUrl =
+    "https://bxhoiovlk4.ufs.sh/f/gJvTMDqMASDhk7KRySlfgWKnPdNbvXtpsMc4Z67OAm93LUBY";
   private static resolveTemplatePath(filename: string): string {
     const distPath = join(
       process.cwd(),
@@ -70,7 +84,7 @@ export class EmailService {
         const frontend_url = process.env.FRONTEND_URL;
         if (!frontend_url) {
           appError("Failed to send email", ERROR_CODE.INVLDDATA, {
-            code: "SL..",
+            code: "SL00",
             details: "Email service not well configured",
           });
         }
@@ -82,6 +96,17 @@ export class EmailService {
             redirect_uri,
           }),
           text: `Parrot Verify your email`,
+        };
+
+      case EmailTemplate.PASSWORD_RESET_CODE:
+        const codeCtx = context as AUTH_PASSWORD_RESET_CODE;
+        return {
+          html: this.renderHbs("password-reset.hbs", {
+            name: codeCtx.name,
+            code: codeCtx.code,
+            expiresInMins: codeCtx.expiresInMins,
+          }),
+          text: `Hi ${codeCtx.name}, your password reset code is ${codeCtx.code}. It expires in ${codeCtx.expiresInMins} minutes.`,
         };
 
       default:

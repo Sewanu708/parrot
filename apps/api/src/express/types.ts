@@ -30,9 +30,9 @@ export type RequestProperties = {
 
 export type RequestComponents = {
   body: any;
-  query: Record<string, string>;
+  query: Record<string, any>;
   headers: IncomingHttpHeaders;
-  params: Record<string, string>;
+  params: Record<string, any>;
   meta: Record<string, any>;
   props: Record<string, any>;
   properties: RequestProperties;
@@ -50,8 +50,8 @@ export type RequestAugments = {
 //  Handler types
 // ──────────────────────────────────────────────
 
-export type HandlerResult = {
-  data?: any;
+export type HandlerResult<T = any> = {
+  data?: T;
   message?: string;
   status?: number;
   endHandlerChain?: boolean;
@@ -60,10 +60,10 @@ export type HandlerResult = {
   augments?: RequestAugments;
 };
 
-export type HandlerFunction = (
+export type HandlerFunction<T = any> = (
   requestComponents: RequestComponents,
   helpers: Record<string, any>,
-) => HandlerResult | Promise<HandlerResult>;
+) => HandlerResult<T> | Promise<HandlerResult<T>>;
 
 // ──────────────────────────────────────────────
 //  Response types
