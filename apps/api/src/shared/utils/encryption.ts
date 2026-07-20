@@ -8,7 +8,7 @@ import {
   createHash,
 } from "crypto";
 import bcrypt from "bcrypt";
-import { env } from "@parrot/db/src/env";
+import { env } from "../env";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LEN = 16;

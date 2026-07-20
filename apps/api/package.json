@@ -4,11 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest"
   },
   "dependencies": {
     "@parrot/db": "workspace:*",
     "@parrot/sdk": "workspace:*",
+    "@t3-oss/env-core": "^0.13.11",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
@@ -27,7 +29,10 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.0",
     "@types/request-ip": "^0.0.41",
+    "@types/supertest": "^7.2.1",
+    "supertest": "^7.2.2",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.10"
   }
 }

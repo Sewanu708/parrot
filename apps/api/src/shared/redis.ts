@@ -1,10 +1,10 @@
 import { Redis } from "ioredis";
-import { env } from "@parrot/db/src/env";
 import { logger } from "../logger";
+import { env } from "./env";
 
 export class RedisService {
   public redis: Redis;
-  private isReady = false; // Track connection status
+  private isReady = false; 
 
   constructor() {
     const dbUrl = env.REDIS_URL;
@@ -18,7 +18,7 @@ export class RedisService {
     });
 
     this.redis.on("connect", () => {
-      // logger.info("IoRedis connected!");
+      logger.info("IoRedis connected!");
       this.isReady = true;
     });
 
@@ -42,13 +42,10 @@ export class RedisService {
 
   async get<T>(key: string): Promise<T | null> {
     let data = null;
-    if (!this.isReady) {
-      return null;
-    }
-
     try {
       data = await this.redis.get(key);
     } catch (err) {
+
       if (err instanceof Error)
         logger.error(`IoRedis get failed: ${err.message}`);
     }
@@ -65,9 +62,6 @@ export class RedisService {
   }
 
   async del(key: string): Promise<number> {
-    if (!this.isReady) {
-      return 0;
-    }
     try {
       return this.redis.del(key);
     } catch (err) {
@@ -82,10 +76,6 @@ export class RedisService {
     value: T,
     opts?: { ttl?: number },
   ): Promise<"OK" | T | null> {
-    if (!this.isReady) {
-      return null;
-    }
-
     try {
       const stringifiedValue =
         typeof value === "object" ? JSON.stringify(value) : String(value);
@@ -104,5 +94,10 @@ export class RedisService {
   }
 }
 
-// Export a singleton instance
-export const redisClient = new RedisService();
+let _redisInstance: RedisService | null;
+
+export function getRedisInstance(): RedisService {
+  if (_redisInstance) return _redisInstance;
+  _redisInstance = new RedisService();
+  return _redisInstance;
+}

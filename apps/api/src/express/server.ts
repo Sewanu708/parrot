@@ -293,6 +293,7 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
     addHandler,
     startServer,
     executeRequest,
+    getApp: () => app,
   };
 }
 

@@ -13,9 +13,10 @@ import { EmailService, EmailTemplate } from "../../notification/email.service";
 import { ONE_DAY, PRODUCT_NAME } from "../../shared/constant";
 import { LoginResponse, SuccessResponse } from "@parrot/sdk";
 import { randomBytes, randomInt } from "crypto";
-import { redisClient } from "../../shared/redis";
+import { getRedisInstance } from "../../shared/redis";
 
 export class AuthController {
+  private static redisClient = getRedisInstance();
   static async signup(req: RequestComponents): Promise<HandlerResult> {
     const { name, email, password } = req.body;
 
@@ -150,7 +151,7 @@ export class AuthController {
       sessionExpiresAt,
       IP || undefined,
       userAgent,
-      lastActiveTenantId
+      lastActiveTenantId,
     );
 
     return {
@@ -227,9 +228,11 @@ export class AuthController {
 
     const resetCode = String(randomInt(100000, 999999));
 
-    await redisClient.set(`reset_password:${resetCode}`, email, {
+    await this.redisClient.set(`reset_password:${resetCode}`, email, {
       ttl: 900000,
-    }); // 15 mins in ms
+    }); 
+
+    
 
     await EmailService.sendEmail({
       to: email,
@@ -250,7 +253,7 @@ export class AuthController {
   ): Promise<HandlerResult<SuccessResponse>> {
     const { token, password } = req.body;
 
-    const email = await redisClient.get<string>(`reset_password:${token}`);
+    const email = await this.redisClient.get<string>(`reset_password:${token}`);
     if (!email) {
       appError("Invalid or expired reset code.", ERROR_CODE.INVLDREQ, {
         code: "SL01",
@@ -258,7 +261,7 @@ export class AuthController {
     }
 
     // Burn the code so it can never be used again
-    await redisClient.del(`reset_password:${token}`);
+    await this.redisClient.del(`reset_password:${token}`);
 
     const data = await AuthRepository.getUserWithPassword(email);
     if (!data) {

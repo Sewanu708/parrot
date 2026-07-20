@@ -2,7 +2,7 @@ import { Resend } from "resend";
 import { logger } from "../logger";
 import { appError } from "../express/errors";
 import { ERROR_CODE } from "../express/constant";
-import { env } from "@parrot/db/src/env";
+import { env } from "../shared/env";
 import * as hbs from "handlebars";
 import { join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
@@ -41,7 +41,13 @@ export enum EmailTemplate {
 }
 
 export class EmailService {
-  private static resend = new Resend(env.RESEND_KEY);
+  private static _resend: Resend | null = null;
+  private static get resend(): Resend {
+    if (!this._resend) {
+      this._resend = new Resend(env.RESEND_KEY);
+    }
+    return this._resend;
+  }
   private static logoUrl =
     "https://bxhoiovlk4.ufs.sh/f/gJvTMDqMASDhk7KRySlfgWKnPdNbvXtpsMc4Z67OAm93LUBY";
   private static resolveTemplatePath(filename: string): string {
