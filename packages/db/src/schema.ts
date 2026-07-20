@@ -17,6 +17,7 @@ export const userStatusEnum = pgEnum("user_status", [
   "invited",
   "active",
   "suspended",
+  "pending"
 ]);
 
 export const conversationStatusEnum = pgEnum("conversation_status", [
@@ -53,15 +54,14 @@ export const inviteStatusEnum = pgEnum("invite_status", [
   "revoked",
 ]);
 
-export const tokenTypeEnum = pgEnum("token_type", [
-  "email_verification",
-  "password_reset",
-  "magic_link"
-]);
+
 
 export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
+  domain: text("domain"),
+  supportEmail: text("support_email"),
+  brandColor: text("brand_color"),
   logoUrl: text("logo_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -97,16 +97,10 @@ export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    tenantId: uuid("tenant_id")
-      .notNull()
-      .references(() => tenants.id, { onDelete: "cascade" }),
-    roleId: uuid("role_id").references(() => roles.id, {
-      onDelete: "set null",
-    }),
     name: text("name").notNull(),
     email: text("email").notNull().unique(), // use citext extension at DB level
     emailVerified: boolean("email_verified").notNull().default(false),
-    status: userStatusEnum("status").notNull().default("invited"),
+    status: userStatusEnum("status").notNull().default("pending"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -116,33 +110,37 @@ export const users = pgTable(
       .notNull()
       .defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
-  },
-  (table) => [
-    uniqueIndex("uq_users_tenant_email").on(table.tenantId, table.email),
-    index("idx_users_tenant_id").on(table.tenantId),
-    index("idx_users_role_id").on(table.roleId),
-  ],
+  }
 );
 
-export const verificationTokens = pgTable(
-  "verification_tokens",
+export const tenantMembers = pgTable(
+  "tenant_members",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    token: text("token").notNull().unique(),
-    type: tokenTypeEnum("type").notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    roleId: uuid("role_id").references(() => roles.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
   (table) => [
-    index("idx_verification_tokens_user_id").on(table.userId),
-    index("idx_verification_tokens_token").on(table.token),
+    uniqueIndex("uq_tenant_members_tenant_user").on(table.tenantId, table.userId),
+    index("idx_tenant_members_tenant_id").on(table.tenantId),
+    index("idx_tenant_members_user_id").on(table.userId),
+    index("idx_tenant_members_role_id").on(table.roleId),
   ],
 );
+
 
 // ──────────────────────────────────────────────
 //  Sessions
@@ -388,6 +386,7 @@ export const invites = pgTable(
 export type Tenant = InferSelectModel<typeof tenants>;
 export type Role = InferSelectModel<typeof roles>;
 export type User = InferSelectModel<typeof users>;
+export type TenantMember = InferSelectModel<typeof tenantMembers>;
 export type Session = InferSelectModel<typeof sessions>;
 export type Account = InferSelectModel<typeof accounts>;
 export type Permission = InferSelectModel<typeof permissions>;
@@ -397,4 +396,3 @@ export type Conversation = InferSelectModel<typeof conversations>;
 export type Message = InferSelectModel<typeof messages>;
 export type Ticket = InferSelectModel<typeof tickets>;
 export type Invite = InferSelectModel<typeof invites>;
-export type VerificationToken = InferSelectModel<typeof verificationTokens>;

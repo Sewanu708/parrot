@@ -18,6 +18,21 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7
+    container_name: parrot_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - parrot_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   parrot_pgdata:
+  parrot_redisdata:
 

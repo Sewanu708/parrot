@@ -2,7 +2,7 @@ import express, { NextFunction } from "express";
 import { Request, Response } from "express";
 import { logger } from "../logger";
 import { env } from "node:process";
-import { ERROR_STATUS_CODE_MAPPING, HTTPStatusCode } from "./constant";
+import { HTTPStatusCode } from "./constant";
 import cors from "cors";
 import { getClientIp } from "request-ip";
 import { AppError } from "./errors";
@@ -32,7 +32,6 @@ export type {
 
 function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
   const app = express();
-  const errorCodeMappings = ERROR_STATUS_CODE_MAPPING;
 
   const { port = 8080, enableCors } = serverConfig;
 
@@ -216,9 +215,9 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
             if (error.details) {
               responseComponents.body.errors.details = error.details;
             }
-            if (error.publicCode) {
-              responseComponents.body.errors.publicCode = error.publicCode;
-            }
+
+            responseComponents.body.errors.publicCode =
+              error.publicCode ?? "SL00";
 
             logger.error(
               {
@@ -234,10 +233,10 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
             responseComponents.statusCode = 500;
             responseComponents.body.status = "error";
             responseComponents.body.message = "An unexpected error occurred";
-            responseComponents.body.errors = {} as ErrorDetail
+            responseComponents.body.errors = {} as ErrorDetail;
             // add a public code for internal errors
-            //  responseComponents.body.errors.publicCode = error.details;
-            responseComponents.body.errors.message = "An unexpected error occurred";
+            responseComponents.body.errors.publicCode = "SL00";
+            ("An unexpected error occurred");
             logger.error(
               { error, path, method },
               `UnhandledError: 500 ${method} ${path}`,
@@ -294,6 +293,7 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
     addHandler,
     startServer,
     executeRequest,
+    getApp: () => app,
   };
 }
 

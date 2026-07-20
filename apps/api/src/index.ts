@@ -1,9 +1,15 @@
+import "dotenv/config";
+import { env } from "./shared/env";
 import { createServer } from "./express/server";
+import { authRoutes } from "./modules/auth/routes";
 
-const server = createServer({
-  port: Number(process.env.PORT),
+export const server = createServer({
+  port: Number(env.PORT),
   enableCors: true,
 });
 
+authRoutes.forEach((route) => server.addHandler(route));
 
-server.startServer()
+if (process.env.NODE_ENV !== "test") {
+  server.startServer();
+}

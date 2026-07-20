@@ -1,4 +1,5 @@
 import { ERROR_CODE, ERROR_STATUS_CODE_MAPPING } from "./constant";
+import { PublicErrorCode } from "@parrot/sdk";
 
 type ErrorCodeKey = keyof typeof ERROR_CODE;
 type ErrorCodeValue = (typeof ERROR_CODE)[ErrorCodeKey];
@@ -8,7 +9,7 @@ export type AppErrorOptions = {
   /** Additional context for logging (not sent to client) */
   context?: Record<string, any>;
   details?: string;
-  code?: string;
+  code?: PublicErrorCode;
 };
 
 // ──────────────────────────────────────────────

@@ -2,15 +2,12 @@ import { Resend } from "resend";
 import { logger } from "../logger";
 import { appError } from "../express/errors";
 import { ERROR_CODE } from "../express/constant";
-import { env } from "node:process";
+import { env } from "../shared/env";
 import * as hbs from "handlebars";
 import { join } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 
-const resend = new Resend(env.RESEND_API_KEY);
-
-const DEFAULT_FROM_EMAIL =
-  env.DEFAULT_FROM_EMAIL || "Parrot <noreply@yourdomain.com>";
+const DEFAULT_FROM_EMAIL = env.DEFAULT_FROM_EMAIL;
 
 export type SendEmailOptions = {
   to: string | string[];
@@ -18,7 +15,7 @@ export type SendEmailOptions = {
   html?: string;
   text?: string;
   template?: EmailTemplate;
-  context?: AUTH_VERIFICATION;
+  context?: AUTH_VERIFICATION | AUTH_PASSWORD_RESET | AUTH_PASSWORD_RESET_CODE;
 };
 
 export type AUTH_VERIFICATION = {
@@ -26,12 +23,33 @@ export type AUTH_VERIFICATION = {
   hash: string;
 };
 
+export type AUTH_PASSWORD_RESET = {
+  name: string;
+  hash: string;
+};
+
+export type AUTH_PASSWORD_RESET_CODE = {
+  name: string;
+  code: string;
+  expiresInMins: number;
+};
+
 export enum EmailTemplate {
   VERIFICATION = "AUTH_VERIFICATION",
+  PASSWORD_RESET = "AUTH_PASSWORD_RESET",
+  PASSWORD_RESET_CODE = "AUTH_PASSWORD_RESET_CODE",
 }
 
 export class EmailService {
-  private static logoUrl = "https://bxhoiovlk4.ufs.sh/f/gJvTMDqMASDhk7KRySlfgWKnPdNbvXtpsMc4Z67OAm93LUBY";
+  private static _resend: Resend | null = null;
+  private static get resend(): Resend {
+    if (!this._resend) {
+      this._resend = new Resend(env.RESEND_KEY);
+    }
+    return this._resend;
+  }
+  private static logoUrl =
+    "https://bxhoiovlk4.ufs.sh/f/gJvTMDqMASDhk7KRySlfgWKnPdNbvXtpsMc4Z67OAm93LUBY";
   private static resolveTemplatePath(filename: string): string {
     const distPath = join(
       process.cwd(),
@@ -67,10 +85,10 @@ export class EmailService {
     switch (template) {
       case EmailTemplate.VERIFICATION:
         const ctx = context as AUTH_VERIFICATION;
-        const frontend_url = process.env.FRONTEND_URL;
+        const frontend_url = env.FRONTEND_URL;
         if (!frontend_url) {
           appError("Failed to send email", ERROR_CODE.INVLDDATA, {
-            code: "SL..",
+            code: "SL00",
             details: "Email service not well configured",
           });
         }
@@ -82,6 +100,17 @@ export class EmailService {
             redirect_uri,
           }),
           text: `Parrot Verify your email`,
+        };
+
+      case EmailTemplate.PASSWORD_RESET_CODE:
+        const codeCtx = context as AUTH_PASSWORD_RESET_CODE;
+        return {
+          html: this.renderHbs("password-reset.hbs", {
+            name: codeCtx.name,
+            code: codeCtx.code,
+            expiresInMins: codeCtx.expiresInMins,
+          }),
+          text: `Hi ${codeCtx.name}, your password reset code is ${codeCtx.code}. It expires in ${codeCtx.expiresInMins} minutes.`,
         };
 
       default:
@@ -110,9 +139,10 @@ export class EmailService {
         );
       }
 
-      const { data, error } = await resend.emails.send({
+      const { data, error } = await this.resend.emails.send({
         from: DEFAULT_FROM_EMAIL,
-        to: Array.isArray(options.to) ? options.to : [options.to],
+        // to: Array.isArray(options.to) ? options.to : [options.to],
+        to: "sewanu708@gmail.com",
         subject: options.subject,
         html: htmlBody,
         text: textBody,
