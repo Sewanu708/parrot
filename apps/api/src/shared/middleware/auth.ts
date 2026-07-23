@@ -1,11 +1,15 @@
-import { RequestComponents, HandlerResult, HandlerFunction } from "../../express/types";
+import { RequestComponents, HandlerResult } from "../../express/types";
 import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
 import { db } from "@parrot/db/src/config";
 import { sessions, users } from "@parrot/db/src/schema";
 import { eq } from "drizzle-orm";
+import expressHandler from "../../express/handler";
 
-export const requireAuth: HandlerFunction = async (req: RequestComponents): Promise<HandlerResult> => {
+export const requireAuth = expressHandler({
+  path: "*",
+  method: "get",
+  handler: async (req: RequestComponents): Promise<HandlerResult> => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     appError("Missing or invalid authorization header", ERROR_CODE.NOAUTHERR, { code: "SL07" });
@@ -33,4 +37,5 @@ export const requireAuth: HandlerFunction = async (req: RequestComponents): Prom
       }
     }
   };
-};
+  },
+});

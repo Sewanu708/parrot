@@ -76,6 +76,7 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
             message: "",
             status: "",
           },
+          headers: {},
         };
 
         try {
@@ -175,7 +176,7 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
               requestComponents.headers = {
                 ...requestComponents.headers,
                 ...middlewareAugments.headers,
-              };
+              } as RequestComponents["headers"];
             }
 
             if (middlewareExecutionResult.endHandlerChain) {
@@ -199,6 +200,15 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
           responseComponents.body.status = "success";
           responseComponents.body.message = result.message || "";
           responseComponents.body.data = result.data || {};
+          responseComponents.headers = result.headers || {};
+
+          for (const header in responseComponents.headers) {
+            expressResponse.setHeader(
+              header,
+              responseComponents.headers[header],
+            );
+          }
+
           expressResponse
             .status(responseComponents.statusCode)
             .json(responseComponents.body);
@@ -244,6 +254,7 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
           }
 
           expressResponse
+            .set(responseComponents.headers)
             .status(responseComponents.statusCode)
             .json(responseComponents.body);
         } finally {

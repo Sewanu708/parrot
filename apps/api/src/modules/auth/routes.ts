@@ -8,11 +8,12 @@ import {
   ResendVerificationSchema,
 } from "@parrot/sdk";
 import { validateRequest } from "../../shared/middleware/validate";
+import { unauthenticatedLimiter } from "../../shared/middleware/limiter";
 
 export const signupRoute = expressHandler({
   method: "post",
   path: "/auth/signup",
-  middlewares: [validateRequest({ body: SignupSchema })],
+  middlewares: [unauthenticatedLimiter, validateRequest({ body: SignupSchema })],
   handler: AuthController.signup.bind(AuthController),
 });
 
