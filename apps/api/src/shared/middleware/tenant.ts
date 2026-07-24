@@ -2,7 +2,13 @@ import { RequestComponents, HandlerResult } from "../../express/types";
 import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
 import { db } from "@parrot/db/src/config";
-import { sessions, tenants, tenantMembers } from "@parrot/db/src/schema";
+import {
+  sessions,
+  tenants,
+  tenantMembers,
+  User,
+  Session,
+} from "@parrot/db/src/schema";
 import { eq, and } from "drizzle-orm";
 import expressHandler from "../../express/handler";
 
@@ -10,7 +16,7 @@ export const requireTenant = expressHandler({
   path: "*",
   method: "get",
   handler: async (req: RequestComponents): Promise<HandlerResult> => {
-    const { user, session } = req.meta; // populated by requireAuth
+    const { user, session } = req.meta as { user: User; session: Session }; // populated by requireAuth
 
     if (!user || !session) {
       appError(
@@ -21,12 +27,12 @@ export const requireTenant = expressHandler({
     }
 
     // 1. Get the requested tenant ID.
-    // We prefer the 'x-tenant-id' header if they are switching, otherwise fallback to the session's active one.
-    const targetTenantId = req.headers["x-tenant-id"] || session.activeTenantId;
+    // We prefer the 'x-tenant-id' header if they are switching
+    const targetTenantId = req.headers["x-tenant-id"];
 
     if (!targetTenantId) {
       appError(
-        "No active tenant selected. Please select a workspace.",
+        "No active Workspace selected. Please select a workspace.",
         ERROR_CODE.PERMERR,
         { code: "SL09" },
       );

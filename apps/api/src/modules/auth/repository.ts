@@ -1,6 +1,15 @@
 import { db } from "@parrot/db/src/config";
-import { users, accounts, sessions, tenants, tenantMembers } from "@parrot/db/src/schema";
+import {
+  users,
+  accounts,
+  sessions,
+  tenants,
+  tenantMembers,
+  roles,
+} from "@parrot/db/src/schema";
 import { eq, and, isNotNull, desc } from "drizzle-orm";
+import { appError } from "../../express/errors";
+import { ERROR_CODE } from "../../express/constant";
 
 export class AuthRepository {
   static async getUserByEmail(email: string) {
@@ -11,7 +20,7 @@ export class AuthRepository {
   static async createUserWithCredentials(
     name: string,
     email: string,
-    passwordHash: string
+    passwordHash: string,
   ) {
     return db.transaction(async (tx) => {
       // 1. Create User
@@ -58,7 +67,7 @@ export class AuthRepository {
     expiresAt: Date,
     ipAddress?: string,
     userAgent?: string,
-    activeTenantId?: string | null
+    activeTenantId?: string | null,
   ) {
     const [session] = await db
       .insert(sessions)
@@ -74,16 +83,33 @@ export class AuthRepository {
     return session;
   }
 
+  static async updateActiveSession(token: string, activeTenantId: string) {
+    const [latestSession] = await db
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(eq(sessions.token, token));
+
+    if (!latestSession) {
+      appError("Unauthorized", ERROR_CODE.NOAUTHERR, { code: "SL07" });
+    }
+
+    await db
+      .update(sessions)
+      .set({ activeTenantId })
+      .where(eq(sessions.id, latestSession.id));
+  }
+
   static async getUserTenants(userId: string) {
     return db
       .select({
         id: tenants.id,
         name: tenants.name,
         domain: tenants.domain,
-        logoUrl: tenants.logoUrl,
+        role: roles.name,
       })
       .from(tenantMembers)
       .innerJoin(tenants, eq(tenantMembers.tenantId, tenants.id))
+      .innerJoin(roles, eq(tenantMembers.roleId, roles.id))
       .where(eq(tenantMembers.userId, userId));
   }
 
@@ -91,7 +117,9 @@ export class AuthRepository {
     const [session] = await db
       .select({ activeTenantId: sessions.activeTenantId })
       .from(sessions)
-      .where(and(eq(sessions.userId, userId), isNotNull(sessions.activeTenantId)))
+      .where(
+        and(eq(sessions.userId, userId), isNotNull(sessions.activeTenantId)),
+      )
       .orderBy(desc(sessions.createdAt))
       .limit(1);
     return session?.activeTenantId || null;

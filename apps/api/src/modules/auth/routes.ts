@@ -7,8 +7,12 @@ import {
   ResetPasswordSchema,
   ResendVerificationSchema,
 } from "@parrot/sdk";
-import { validateRequest } from "../../shared/middleware/validate";
-import { unauthenticatedLimiter } from "../../shared/middleware/limiter";
+import { validateRequest } from '../../shared/middleware/validate';
+import {
+  unauthenticatedLimiter,
+  authenticatedLimiter,
+} from '../../shared/middleware/limiter';
+import { requireAuth } from '../../shared/middleware/auth';
 
 export const signupRoute = expressHandler({
   method: "post",
@@ -51,6 +55,13 @@ export const resendVerificationRoute = expressHandler({
   handler: AuthController.resendVerificationEmail.bind(AuthController),
 });
 
+export const getMeRoute = expressHandler({
+  method: 'get',
+  path: '/auth/me',
+  middlewares: [requireAuth, authenticatedLimiter],
+  handler: AuthController.me.bind(AuthController),
+});
+
 export const authRoutes = [
   signupRoute,
   verifyEmailRoute,
@@ -58,4 +69,5 @@ export const authRoutes = [
   forgotPasswordRoute,
   resetPasswordRoute,
   resendVerificationRoute,
+  getMeRoute,
 ];

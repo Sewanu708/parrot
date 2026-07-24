@@ -6,7 +6,8 @@
   "types": "./src/index.ts",
   "scripts": {
     "build": "tsc",
-    "push": "drizzle-kit push"
+    "push": "drizzle-kit push",
+    "generate":"drizzle-kit generate"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
