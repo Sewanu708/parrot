@@ -11,6 +11,10 @@ export const PUBLIC_ERROR_CODE = {
   SL09: "No active workspace selected. Please select a workspace.",
   SL10: "Workspace not found.",
   SL11: "You do not have access to this workspace.",
+  SL12: "Property not found.",
+  SL13: "Conversation not found.",
+  SL14: "Failed to send message.",
 } as const;
 
 export type PublicErrorCode = keyof typeof PUBLIC_ERROR_CODE;
+

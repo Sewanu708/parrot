@@ -1,10 +1,12 @@
 import pino, { LoggerOptions } from "pino";
+
 const LOG_TYPE = {
   LOG: "log",
   INFO: "info",
   WARN: "warn",
   ERROR: "error",
 };
+
 const customLevels = {
   log: 20,
   info: 30,
@@ -12,15 +14,33 @@ const customLevels = {
   error: 50,
 };
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const pinoConfig: LoggerOptions = {
   level: process.env.PINO_LOG_LEVEL || "log",
   customLevels,
   useOnlyCustomLevels: true,
+
+  serializers: {
+    err: pino.stdSerializers.err,
+    error: pino.stdSerializers.err,
+  },
+
   formatters: {
     level: (label) => ({ level: label.toUpperCase() }),
   },
   messageKey: "label",
-  nestedKey: "data",
+
+  ...(isDev && {
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+        translateTime: "SYS:HH:MM:ss",
+        ignore: "pid,hostname",
+      },
+    },
+  }),
 
   redact: {
     paths: [
@@ -30,20 +50,12 @@ const pinoConfig: LoggerOptions = {
       "apiKey",
       "api_key",
       "otp",
-
       "*.password",
       "*.authorization",
       "*.token",
       "*.apiKey",
       "*.api_key",
       "*.otp",
-
-      "*.*.password",
-      "*.*.authorization",
-      "*.*.token",
-      "*.*.apiKey",
-      "*.*.api_key",
-      "*.*.otp",
     ],
     censor: "************",
   },

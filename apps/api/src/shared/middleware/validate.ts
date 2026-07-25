@@ -14,16 +14,22 @@ export const validateRequest = (schema: {
     path: "/",
     handler: (req) => {
       try {
+        logger.info(req.body);
         if (schema.body) req.body = schema.body.parse(req.body);
 
         if (schema.query)
           req.query = schema.query.parse(req.query) as Record<string, any>;
-        logger.info(req.body);
+
         if (schema.params)
           req.params = schema.params.parse(req.params) as Record<string, any>;
         return {};
       } catch (error) {
         if (error instanceof z.ZodError) {
+          logger.info(
+            error.issues
+              .map((e) => `${e.path.join(".")}: ${e.message}`)
+              .join(", "),
+          );
           appError("Validation failed", ERROR_CODE.INVLDREQ, {
             code: "SL01",
             details: error.issues

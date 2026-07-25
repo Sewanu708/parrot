@@ -231,9 +231,9 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
 
             logger.error(
               {
+                err: error,
                 errorCode: error.errorCode,
                 publicCode: error.publicCode,
-                context: error.context,
                 path,
                 method,
               },
@@ -244,11 +244,9 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
             responseComponents.body.status = "error";
             responseComponents.body.message = "An unexpected error occurred";
             responseComponents.body.errors = {} as ErrorDetail;
-            // add a public code for internal errors
             responseComponents.body.errors.publicCode = "SL00";
-            ("An unexpected error occurred");
             logger.error(
-              { error, path, method },
+              { err: error, path, method },
               `UnhandledError: 500 ${method} ${path}`,
             );
           }
@@ -295,7 +293,7 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
         message: "Some error occurred",
       });
     });
-    app.listen(port, () => {
+    return app.listen(port, () => {
       logger.info(`Server running on port ${port}`);
     });
   }

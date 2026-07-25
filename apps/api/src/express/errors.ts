@@ -4,12 +4,12 @@ import { PublicErrorCode } from "@parrot/sdk";
 type ErrorCodeKey = keyof typeof ERROR_CODE;
 type ErrorCodeValue = (typeof ERROR_CODE)[ErrorCodeKey];
 
-
 export type AppErrorOptions = {
   /** Additional context for logging (not sent to client) */
   context?: Record<string, any>;
   details?: string;
   code?: PublicErrorCode;
+  cause?: unknown;
 };
 
 // ──────────────────────────────────────────────
@@ -29,7 +29,7 @@ export class AppError extends Error {
     errorCode: ErrorCodeValue = ERROR_CODE.APPERR,
     options: AppErrorOptions = {},
   ) {
-    super(message);
+    super(message, { cause: options.cause });
     this.name = "AppError";
     this.errorCode = errorCode;
     this.publicCode = options.code;
@@ -40,6 +40,10 @@ export class AppError extends Error {
       ERROR_STATUS_CODE_MAPPING[
         errorCode as keyof typeof ERROR_STATUS_CODE_MAPPING
       ] || 500;
+
+    if (options.cause && options.cause instanceof Error && options.cause.stack) {
+      this.stack = `${this.stack}\n  [Caused by]: ${options.cause.stack}`;
+    }
   }
 }
 
