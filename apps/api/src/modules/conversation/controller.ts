@@ -8,14 +8,15 @@ import type {
 } from "@parrot/sdk";
 import type { User } from "@parrot/db/src/schema";
 import { wsGateway } from "../../ws/gateway";
-import { logger } from "../../logger";
 
 export class ConversationController {
   /**
    * POST /api/v1/widget/messages
    * Visitor sends a message from the embeddable widget
    */
-  static async sendVisitorMessage(req: RequestComponents): Promise<HandlerResult> {
+  static async sendVisitorMessage(
+    req: RequestComponents,
+  ): Promise<HandlerResult> {
     const data = req.body as SendVisitorMessageInput;
 
     try {
@@ -54,7 +55,9 @@ export class ConversationController {
    * POST /api/v1/conversations/messages
    * Agent sends a message from the web dashboard
    */
-  static async sendAgentMessage(req: RequestComponents): Promise<HandlerResult> {
+  static async sendAgentMessage(
+    req: RequestComponents,
+  ): Promise<HandlerResult> {
     const user = req.meta?.user as User | undefined;
     if (!user?.id) {
       appError("Unauthorized", ERROR_CODE.NOAUTHERR, { code: "SL07" });
@@ -65,16 +68,15 @@ export class ConversationController {
     try {
       const result = await conversationRepository.createAgentMessage(
         user.id,
-        data
+        data,
       );
-
       // Real-time push back to the widget visitor via WS
-      wsGateway.sendToVisitor(result.visitorId, {
+      wsGateway.sendToVisitor(result.visitorId!, {
         event: "message:new",
         data: {
           id: result.message.id,
           conversationId: result.conversation.id,
-          tenantId: result.tenantId,
+          tenantId: result.conversation.tenantId,
           senderType: "agent",
           agentId: user.id,
           body: result.message.body,
@@ -105,13 +107,14 @@ export class ConversationController {
   static async getMessages(req: RequestComponents): Promise<HandlerResult> {
     const conversationId = req.params.conversationId;
     if (!conversationId) {
-      appError("Conversation ID is required", ERROR_CODE.INVLDDATA, { code: "SL01" });
+      appError("Conversation ID is required", ERROR_CODE.INVLDDATA, {
+        code: "SL01",
+      });
     }
 
     try {
-      const messagesList = await conversationRepository.getConversationMessages(
-        conversationId
-      );
+      const messagesList =
+        await conversationRepository.getConversationMessages(conversationId);
 
       return {
         status: 200,

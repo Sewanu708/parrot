@@ -19,22 +19,12 @@ interface ConversationItem {
 export default function DashboardPage() {
 
   const [activeTab, setActiveTab] = useState<"inbox" | "tickets" | "settings">("inbox");
-  const [conversations, setConversations] = useState<ConversationItem[]>([
-    {
-      id: "demo-conv-1",
-      visitorName: "Visitor #8492",
-      visitorId: "v_8492",
-      lastMessage: "Hello! I have a question about shipping to Canada.",
-      updatedAt: new Date().toISOString(),
-      status: "open",
-      unreadCount: 1,
-    },
-  ]);
+  const [conversations, setConversations] = useState<ConversationItem[]>();
 
-  const [activeConvId, setActiveConvId] = useState<string>("demo-conv-1");
+  const [activeConvId, setActiveConvId] = useState<string>("5f9cb3e9-47ef-458e-b8be-dbb9440820ec");
   const [messages, setMessages] = useState<MessageDto[]>([]);
   const [replyText, setReplyText] = useState("");
-  const [tenantId, setTenantId] = useState<string>("demo-tenant-123");
+  const [tenantId, setTenantId] = useState<string>("08ce1e6d-da79-45f6-b63a-c8c3157082a0");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initialize auth session & active tenant ID from storage
@@ -72,7 +62,7 @@ export default function DashboardPage() {
 
             // Update conversation list item last message
             setConversations((prev) =>
-              prev.map((c) =>
+              prev?.map((c) =>
                 c.id === newMsg.conversationId
                   ? { ...c, lastMessage: newMsg.body || "", updatedAt: newMsg.createdAt }
                   : c
@@ -88,7 +78,13 @@ export default function DashboardPage() {
     }
 
     return () => {
-      socket?.close();
+      if (socket) {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.close();
+        } else if (socket.readyState === WebSocket.CONNECTING) {
+          socket.onopen = () => socket.close();
+        }
+      }
     };
   }, [tenantId]);
 
@@ -126,7 +122,7 @@ export default function DashboardPage() {
     }
   };
 
-  const activeConv = conversations.find((c) => c.id === activeConvId);
+  const activeConv = conversations?.find((c) => c.id === activeConvId);
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 font-sans overflow-hidden">
@@ -159,7 +155,7 @@ export default function DashboardPage() {
                 <span>Inbox</span>
               </div>
               <span className="px-2 py-0.5 text-xs bg-indigo-500/20 text-indigo-300 rounded-full font-semibold">
-                {conversations.length}
+                {conversations?.length}
               </span>
             </button>
 
@@ -216,7 +212,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto divide-y divide-slate-800/50">
-              {conversations.map((c) => (
+              {conversations?.map((c) => (
                 <div
                   key={c.id}
                   onClick={() => setActiveConvId(c.id)}
@@ -346,7 +342,7 @@ export default function DashboardPage() {
             {`<script
   src="http://localhost:5173/dist/widget.js"
   data-property-id="eaaeef31-c9f8-4960-ae65-ffb4e1aa1003"
-  data-api-host="http://localhost:3001"
+  data-api-host="http://localhost:8080"
   defer>
 </script>`}
           </div>

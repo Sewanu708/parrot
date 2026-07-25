@@ -17,7 +17,9 @@ import type {
   HandlerConfiguration,
   HandlerExecutionContext,
   ErrorDetail,
+  RequestContext,
 } from "./types";
+import { requestContext } from "../shared/utils/global";
 
 export type {
   HandlerConfiguration,
@@ -35,11 +37,16 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
 
   const { port = 8080, enableCors } = serverConfig;
 
-  app.use(express.json()); // for parsing application/json
+  app.use(express.json());
 
   if (enableCors) {
     app.use(cors());
   }
+
+  app.use((req, res, next) => {
+    const requestId = (req.headers["x-request-id"] as string) || crypto.randomUUID();
+    requestContext.run({ requestId }, () => next());
+  });
 
   const handlerHelpers: Record<string, any> = {};
   handlerHelpers["http_statuses"] = HTTPStatusCode;
@@ -55,7 +62,6 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
       headers: request.headers,
     };
   }
-
   function addHandler(handlerConfiguration: HandlerConfiguration) {
     const { method, path, props } = handlerConfiguration;
     app[method](

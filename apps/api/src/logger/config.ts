@@ -1,4 +1,5 @@
 import pino, { LoggerOptions } from "pino";
+import { getRequestContext } from "../shared/utils/global";
 
 const LOG_TYPE = {
   LOG: "log",
@@ -20,6 +21,18 @@ const pinoConfig: LoggerOptions = {
   level: process.env.PINO_LOG_LEVEL || "log",
   customLevels,
   useOnlyCustomLevels: true,
+
+  mixin() {
+    const ctx = getRequestContext();
+    return ctx
+      ? {
+          requestId: ctx.requestId,
+          ...(ctx.userId && { userId: ctx.userId }),
+          ...(ctx.tenantId && { tenantId: ctx.tenantId }),
+        }
+      : {};
+  },
+
 
   serializers: {
     err: pino.stdSerializers.err,

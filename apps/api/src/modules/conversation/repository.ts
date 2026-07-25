@@ -126,11 +126,21 @@ export class ConversationRepository {
           body: data.body,
         })
         .returning();
+      const [existing] = await tx
+        .select()
+        .from(visitors)
+        .where(eq(visitors.id, conversation.visitorId));
+
+      if (!existing) {
+        appError("Visitor not found", ERROR_CODE.NOTFOUND, {
+          code: "SL13",
+        });
+      }
 
       return {
         conversation,
         message: newMessage,
-        visitorId: conversation.visitorId,
+        visitorId: existing.clientVisitorId,
         tenantId: conversation.tenantId,
       };
     });

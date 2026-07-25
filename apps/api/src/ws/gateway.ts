@@ -21,13 +21,16 @@ export class WSGateway {
     this.wss = new WebSocketServer({ server, path: "/ws" });
 
     this.wss.on("connection", (socket: WebSocket, request) => {
-      logger.info("Websocket connection triggering")
+      logger.info("Websocket connection triggering");
       const url = new URL(request.url || "", `http://${request.headers.host}`);
       const clientType = url.searchParams.get("type"); // "agent" | "visitor"
       const tenantId = url.searchParams.get("tenantId");
       const visitorId = url.searchParams.get("visitorId");
 
-      logger.info({ clientType, tenantId, visitorId }, "New WebSocket connection");
+      logger.info(
+        { clientType, tenantId, visitorId },
+        "New WebSocket connection",
+      );
 
       if (clientType === "agent" && tenantId) {
         this.registerAgent(tenantId, socket);

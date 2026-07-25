@@ -1,9 +1,6 @@
 import expressHandler from "../../express/handler";
 import { ConversationController } from "./controller";
-import {
-  VisitorConversationSchema,
-  SendAgentMessageSchema,
-} from "@parrot/sdk";
+import { VisitorConversationSchema, SendAgentMessageSchema } from "@parrot/sdk";
 import { validateRequest } from "../../shared/middleware/validate";
 import { requireAuth } from "../../shared/middleware/auth";
 import { requireTenant } from "../../shared/middleware/tenant";
@@ -12,7 +9,9 @@ export const sendVisitorMessageRoute = expressHandler({
   method: "post",
   path: "/widget/messages",
   middlewares: [validateRequest({ body: VisitorConversationSchema })],
-  handler: ConversationController.sendVisitorMessage.bind(ConversationController),
+  handler: ConversationController.sendVisitorMessage.bind(
+    ConversationController,
+  ),
 });
 
 export const sendAgentMessageRoute = expressHandler({
@@ -29,7 +28,7 @@ export const sendAgentMessageRoute = expressHandler({
 export const getConversationMessagesRoute = expressHandler({
   method: "get",
   path: "/conversations/:conversationId/messages",
-  middlewares: [requireAuth, requireTenant],
+  middlewares: [],
   handler: ConversationController.getMessages.bind(ConversationController),
 });
 
