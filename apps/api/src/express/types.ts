@@ -31,7 +31,7 @@ export type RequestProperties = {
 export type RequestComponents = {
   body: any;
   query: Record<string, any>;
-  headers: IncomingHttpHeaders;
+  headers: IncomingHttpHeaders
   params: Record<string, any>;
   meta: Record<string, any>;
   props: Record<string, any>;
@@ -41,7 +41,7 @@ export type RequestComponents = {
 export type RequestAugments = {
   body?: any;
   query?: Record<string, string>;
-  headers?: IncomingHttpHeaders;
+  headers?: IncomingHttpHeaders | Record<string, string | number | string[]>;
   params?: Record<string, string>;
   meta?: Record<string, any>;
 };
@@ -58,6 +58,7 @@ export type HandlerResult<T = any> = {
   skipNextMiddleware?: boolean;
   skipOtherMiddlewares?: boolean;
   augments?: RequestAugments;
+  headers?:Record<string, string | number | string[]>
 };
 
 export type HandlerFunction<T = any> = (
@@ -87,6 +88,7 @@ export type ErrorDetail = {
 export type ResponseComponents = {
   body: ResponseBody;
   statusCode: number;
+  headers: Record<string, string | number | string[]>;
 };
 
 export type ResponseEndEventFunction = (

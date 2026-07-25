@@ -4,7 +4,7 @@ import { env } from "./env";
 
 export class RedisService {
   public redis: Redis;
-  private isReady = false; 
+  private isReady = false;
 
   constructor() {
     const dbUrl = env.REDIS_URL;
@@ -45,7 +45,6 @@ export class RedisService {
     try {
       data = await this.redis.get(key);
     } catch (err) {
-
       if (err instanceof Error)
         logger.error(`IoRedis get failed: ${err.message}`);
     }
@@ -91,6 +90,86 @@ export class RedisService {
     }
 
     return "OK";
+  }
+
+  async hget<T>(key: string, field: string): Promise<T | null> {
+    let data = null;
+    try {
+      data = await this.redis.hget(key, field);
+    } catch (err) {
+      if (err instanceof Error)
+        logger.error(`IoRedis hget failed: ${err.message}`);
+    }
+
+    if (data === null) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(data) as T;
+    } catch {
+      return data as T;
+    }
+  }
+
+  async hset<T>(key: string, field: string, value: T): Promise<number | null> {
+    try {
+      const stringifiedValue =
+        typeof value === "object" ? JSON.stringify(value) : String(value);
+      return this.redis.hset(key, field, stringifiedValue);
+    } catch (err) {
+      if (err instanceof Error)
+        logger.error(`IoRedis hset failed: ${err.message}`);
+      return null;
+    }
+  }
+
+  async hincrby(
+    key: string,
+    field: string,
+    increment: number,
+  ): Promise<number | null> {
+    try {
+      const data = await this.redis.hincrby(key, field, increment);
+      return data;
+    } catch (error) {
+      logger.error(`IoRedis hincrby failed: ${error}`);
+      return null;
+    }
+  }
+
+  async hgetall<T extends Record<string, any>>(key: string): Promise<T | null> {
+    try {
+      const data = await this.redis.hgetall(key);
+
+      if (!data || Object.keys(data).length === 0) {
+        return null;
+      }
+
+      const parsedData: Record<string, any> = {};
+      for (const field in data) {
+        try {
+          parsedData[field] = JSON.parse(data[field]);
+        } catch {
+          parsedData[field] = data[field];
+        }
+      }
+      return parsedData as T;
+    } catch (err) {
+      if (err instanceof Error)
+        logger.error(`IoRedis hgetall failed: ${err.message}`);
+      return null;
+    }
+  }
+
+  async expire(key: string, seconds: number): Promise<number | null> {
+    try {
+      return this.redis.expire(key, seconds);
+    } catch (err) {
+      if (err instanceof Error)
+        logger.error(`IoRedis expire failed: ${err.message}`);
+      return null;
+    }
   }
 }
 

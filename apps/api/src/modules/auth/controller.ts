@@ -277,4 +277,29 @@ export class AuthController {
       data: { message: "Success" },
     };
   }
+
+  static async me(req: RequestComponents): Promise<HandlerResult> {
+    const { user, session } = req.meta;
+
+    if (!user || !session) {
+      appError("Authentication required", ERROR_CODE.NOAUTHERR, {
+        code: "SL07",
+      });
+    }
+
+    const userTenants = await AuthRepository.getUserTenants(user.id);
+
+    const publicUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      tenants: userTenants,
+      activeTenantId: session.activeTenantId,
+    };
+
+    return {
+      status: 200,
+      data: publicUser,
+    };
+  }
 }
