@@ -10,6 +10,7 @@ import {
   index,
   primaryKey,
   check,
+  unique,
 } from "drizzle-orm/pg-core";
 import { sql, InferSelectModel } from "drizzle-orm";
 
@@ -17,7 +18,7 @@ export const userStatusEnum = pgEnum("user_status", [
   "invited",
   "active",
   "suspended",
-  "pending"
+  "pending",
 ]);
 
 export const conversationStatusEnum = pgEnum("conversation_status", [
@@ -54,7 +55,10 @@ export const inviteStatusEnum = pgEnum("invite_status", [
   "revoked",
 ]);
 
-
+export const propertyStatusEnum = pgEnum("property_status", [
+  "active",
+  "inactive",
+]);
 
 export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -93,25 +97,22 @@ export const roles = pgTable(
   ],
 );
 
-export const users = pgTable(
-  "users",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    name: text("name").notNull(),
-    email: text("email").notNull().unique(), // use citext extension at DB level
-    emailVerified: boolean("email_verified").notNull().default(false),
-    status: userStatusEnum("status").notNull().default("pending"),
-    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
-    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-    deletedAt: timestamp("deleted_at", { withTimezone: true }),
-  }
-);
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(), // use citext extension at DB level
+  emailVerified: boolean("email_verified").notNull().default(false),
+  status: userStatusEnum("status").notNull().default("pending"),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
 
 export const tenantMembers = pgTable(
   "tenant_members",
@@ -134,13 +135,15 @@ export const tenantMembers = pgTable(
       .defaultNow(),
   },
   (table) => [
-    uniqueIndex("uq_tenant_members_tenant_user").on(table.tenantId, table.userId),
+    uniqueIndex("uq_tenant_members_tenant_user").on(
+      table.tenantId,
+      table.userId,
+    ),
     index("idx_tenant_members_tenant_id").on(table.tenantId),
     index("idx_tenant_members_user_id").on(table.userId),
     index("idx_tenant_members_role_id").on(table.roleId),
   ],
 );
-
 
 // ──────────────────────────────────────────────
 //  Sessions
@@ -230,14 +233,36 @@ export const rolePermissions = pgTable(
   (table) => [primaryKey({ columns: [table.roleId, table.permissionId] })],
 );
 
-export const visitors = pgTable(
-  "visitors",
+export const properties = pgTable(
+  "properties",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    domain: text("domain"),
+    widgetKey: text("widget_key").notNull().unique(),
+    settings: jsonb("settings").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [index("idx_properties_tenant_id").on(table.tenantId)],
+);
+
+export const visitors = pgTable(
+  "visitors",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => properties.id, { onDelete: "cascade" }),
     name: text("name"),
+    clientVisitorId: uuid("client_visitor_id"),
     email: text("email"),
     phone: text("phone"),
     metadata: jsonb("metadata").notNull().default({}),
@@ -248,7 +273,13 @@ export const visitors = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index("idx_visitors_tenant_id").on(table.tenantId)],
+  (table) => [
+    index("idx_visitors_property_id").on(table.propertyId),
+    unique("uq_visitors_property_client_visitor_id").on(
+      table.propertyId,
+      table.clientVisitorId,
+    ),
+  ],
 );
 
 export const conversations = pgTable(
@@ -391,6 +422,7 @@ export type Session = InferSelectModel<typeof sessions>;
 export type Account = InferSelectModel<typeof accounts>;
 export type Permission = InferSelectModel<typeof permissions>;
 export type RolePermission = InferSelectModel<typeof rolePermissions>;
+export type Property = InferSelectModel<typeof properties>;
 export type Visitor = InferSelectModel<typeof visitors>;
 export type Conversation = InferSelectModel<typeof conversations>;
 export type Message = InferSelectModel<typeof messages>;
