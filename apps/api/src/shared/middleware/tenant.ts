@@ -11,6 +11,7 @@ import {
 } from "@parrot/db/src/schema";
 import { eq, and } from "drizzle-orm";
 import expressHandler from "../../express/handler";
+import { getRequestContext } from "../utils/global";
 
 export const requireTenant = expressHandler({
   path: "*",
@@ -45,6 +46,11 @@ export const requireTenant = expressHandler({
       .where(eq(tenants.id, targetTenantId as string));
     if (!tenant) {
       appError("Workspace not found.", ERROR_CODE.NOTFOUND, { code: "SL10" });
+    }
+
+    const store = getRequestContext();
+    if (store) {
+      store.tenantId = tenant.id;
     }
 
     // 3. Verify the user is actually a member of this tenant

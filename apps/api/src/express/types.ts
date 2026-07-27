@@ -17,6 +17,12 @@ export type HttpMethod =
 //  Request types
 // ──────────────────────────────────────────────
 
+export type RequestContext = {
+  requestId: string;
+  tenantId?: string;
+  userId?: string;
+};
+
 export type RequestProperties = {
   IP: string | null;
   baseURL: string;
@@ -31,7 +37,7 @@ export type RequestProperties = {
 export type RequestComponents = {
   body: any;
   query: Record<string, any>;
-  headers: IncomingHttpHeaders
+  headers: IncomingHttpHeaders;
   params: Record<string, any>;
   meta: Record<string, any>;
   props: Record<string, any>;
@@ -58,7 +64,7 @@ export type HandlerResult<T = any> = {
   skipNextMiddleware?: boolean;
   skipOtherMiddlewares?: boolean;
   augments?: RequestAugments;
-  headers?:Record<string, string | number | string[]>
+  headers?: Record<string, string | number | string[]>;
 };
 
 export type HandlerFunction<T = any> = (

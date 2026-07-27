@@ -18,12 +18,13 @@ export const validateRequest = (schema: {
 
         if (schema.query)
           req.query = schema.query.parse(req.query) as Record<string, any>;
-        logger.info(req.body);
+
         if (schema.params)
           req.params = schema.params.parse(req.params) as Record<string, any>;
         return {};
       } catch (error) {
         if (error instanceof z.ZodError) {
+          
           appError("Validation failed", ERROR_CODE.INVLDREQ, {
             code: "SL01",
             details: error.issues

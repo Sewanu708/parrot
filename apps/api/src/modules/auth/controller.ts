@@ -14,6 +14,7 @@ import { ONE_DAY, PRODUCT_NAME } from "../../shared/constant";
 import { LoginResponse, SuccessResponse } from "@parrot/sdk";
 import { randomBytes, randomInt } from "crypto";
 import { getRedisInstance } from "../../shared/redis";
+import { logger } from "../../logger";
 
 export class AuthController {
   private static redisClient = getRedisInstance();
@@ -47,6 +48,8 @@ export class AuthController {
       template: EmailTemplate.VERIFICATION,
       context: { name: newUser.name, hash: verificationToken },
     });
+
+    logger.info({ name: newUser.name, hash: verificationToken })
 
     return {
       status: 201,
@@ -143,7 +146,7 @@ export class AuthController {
 
     // Create session token
     const sessionToken = randomBytes(32).toString("hex");
-    const sessionExpiresAt = new Date(Date.now() + ONE_DAY * 30); // 30 days
+    const sessionExpiresAt = new Date(Date.now() + ONE_DAY); // 30 days
 
     await AuthRepository.createSession(
       user.id,

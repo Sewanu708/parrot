@@ -7,16 +7,19 @@
   "scripts": {
     "build": "tsc",
     "push": "drizzle-kit push",
-    "generate":"drizzle-kit generate"
+    "generate": "drizzle-kit generate",
+    "seed": "tsx src/seed.ts"
   },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "1.0.0-rc.4",
     "pg": "^8.22.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "1.0.0-rc.4",
     "tsx": "^4.23.1"

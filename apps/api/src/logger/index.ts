@@ -1,10 +1,21 @@
 import pino from "pino";
 import { LOG_TYPE, pinoConfig } from "./config";
+import { getRequestContext } from "../shared/utils/global";
 
 const pinoLogger = pino({
   ...pinoConfig,
   formatters: {
     ...pinoConfig.formatters,
+  },
+  mixin() {
+    const store = getRequestContext();
+    return store
+      ? {
+          requestId: store.requestId,
+          tenantId: store?.tenantId ?? "",
+          userId: store?.userId ?? "",
+        }
+      : {};
   },
 });
 

@@ -13,3 +13,15 @@ export type CreateTenantDto = z.infer<typeof CreateTenantSchema>;
 export const UpdateTenantSchema = CreateTenantSchema.partial();
 
 export type UpdateTenantDto = z.infer<typeof UpdateTenantSchema>;
+
+export interface TenantDto {
+  id: string;
+  name: string;
+  domain: string | null;
+  supportEmail: string | null;
+  brandColor: string | null;
+  logoUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
