@@ -146,7 +146,7 @@ export class AuthController {
 
     // Create session token
     const sessionToken = randomBytes(32).toString("hex");
-    const sessionExpiresAt = new Date(Date.now() + ONE_DAY * 30); // 30 days
+    const sessionExpiresAt = new Date(Date.now() + ONE_DAY); // 30 days
 
     await AuthRepository.createSession(
       user.id,
