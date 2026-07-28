@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginFormData } from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
+import notify from "@/lib/toast";
 import AuthLeftPanel from "@/components/auth/auth-panel";
 
 export default function LoginPage() {
@@ -15,53 +19,89 @@ export default function LoginPage() {
   const checkEmail = searchParams.get("message") === "check-email";
   const urlError = searchParams.get("error");
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [resendSent, setResendSent] = useState(false);
 
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    
+    resolver: zodResolver(loginSchema),
+  });
+
+  useEffect(() => {
+    if (verified) {
+      notify.success("Email verified — you can now sign in.");
+    }
+    if (urlError) {
+      notify.error(decodeURIComponent(urlError));
+    }
+  }, [verified, urlError]);
+
   const isVerificationError =
     error?.toLowerCase().includes("verify") ||
     urlError?.toLowerCase().includes("verify");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     setError(null);
 
     const result = await signIn("credentials", {
-      email,
-      password,
+      email: data.email,
+      password: data.password,
       redirect: false,
     });
 
     setLoading(false);
 
     if (!result?.ok) {
-      setError(result?.error ?? "Invalid email or password.");
+      const errorMsg = result?.error ?? "Invalid email or password.";
+      setError(errorMsg);
+      notify.error(result?.error, errorMsg);
       return;
     }
 
-    router.push(callbackUrl);
+    notify.success("Signed in successfully");
+
+    const session = await getSession();
+    const tenants = session?.user?.tenants ?? [];
+
+    if (tenants.length > 0) {
+      router.push(callbackUrl);
+    } else {
+      router.push("/create-workspace");
+    }
     router.refresh();
   };
 
   const handleResend = async () => {
+    const email = getValues("email");
+    if (!email) {
+      notify.error(null, "Please enter your email address to resend verification.");
+      return;
+    }
     setResending(true);
     try {
       await parrotClient.auth.resendVerification({ email });
       setResendSent(true);
-    } catch {
+      notify.success("Verification email sent", {
+        description: "Check your inbox for the link.",
+      });
+    } catch (err) {
       setError("Failed to resend. Please try again.");
+      notify.error(err, "Failed to resend verification email");
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="min-h-screen bg-dash-bg text-dash-text flex transition-colors duration-200">
       <AuthLeftPanel />
 
       {/* Right — Form */}
@@ -109,7 +149,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email */}
             <div className="space-y-2">
               <label
@@ -121,33 +161,35 @@ export default function LoginPage() {
               <input
                 id="login-email"
                 type="email"
-                required
                 autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane@company.com"
-                className="w-full bg-[#0a0a0a] border border-[#1A1A1A] rounded-md px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white transition-colors duration-200"
+                {...register("email")}
+                placeholder="jane@parrot.dev"
+                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
+              {errors.email && (
+                <p className="font-mono text-[11px] text-red-400">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Password */}
             <div className="space-y-2">
               <label
                 htmlFor="login-password"
-                className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
+                className="block font-mono text-[10px] uppercase tracking-widest text-dash-muted"
               >
                 Password
               </label>
               <input
                 id="login-password"
                 type="password"
-                required
                 autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register("password")}
                 placeholder="••••••••"
-                className="w-full bg-[#0a0a0a] border border-[#1A1A1A] rounded-md px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white transition-colors duration-200"
+                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
+              {errors.password && (
+                <p className="font-mono text-[11px] text-red-400">{errors.password.message}</p>
+              )}
               <div className="flex justify-end">
                 <Link
                   href="/auth/forgot-password"

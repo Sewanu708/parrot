@@ -21,12 +21,19 @@ export interface ApiResponse<T = any> {
 }
 
 export class ParrotApiError extends Error {
+  readonly __brand = "Parrot" as const;
   public readonly status: number;
   public readonly publicCode?: PublicErrorCode;
   public readonly errorCode?: string;
   public readonly details?: string;
 
-  constructor(status: number, message: string, publicCode?: PublicErrorCode, errorCode?: string, details?: string) {
+  constructor(
+    status: number,
+    message: string,
+    publicCode?: PublicErrorCode,
+    errorCode?: string,
+    details?: string,
+  ) {
     super(message);
     this.name = "ParrotApiError";
     this.status = status;
@@ -58,7 +65,6 @@ export class HttpClient {
     this.fetchFn = options.fetchFn || globalThis.fetch.bind(globalThis);
   }
 
-
   setToken(token: string | undefined) {
     this.token = token;
   }
@@ -74,7 +80,7 @@ export class HttpClient {
       body?: any;
       query?: Record<string, string | number | undefined>;
       headers?: Record<string, string>;
-    } = {}
+    } = {},
   ): Promise<ApiResponse<T>> {
     let url = `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
@@ -122,14 +128,18 @@ export class HttpClient {
         json.message || json.errors?.message || "An API error occurred",
         json.errors?.publicCode,
         json.errors?.code,
-        json.errors?.details
+        json.errors?.details,
       );
     }
 
     return json;
   }
 
-  get<T>(endpoint: string, query?: Record<string, any>, headers?: Record<string, string>) {
+  get<T>(
+    endpoint: string,
+    query?: Record<string, any>,
+    headers?: Record<string, string>,
+  ) {
     return this.request<T>(endpoint, { method: "GET", query, headers });
   }
 

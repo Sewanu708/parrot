@@ -1,38 +1,49 @@
-"use client";
-
+"use client"
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupSchema, type SignupFormData } from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
 import AuthLeftPanel from "@/components/auth/auth-panel";
+import { ErrorHandler } from "@/lib/utils";
+import notify from "@/lib/toast";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+  });
+
+  const onSubmit = async (data: SignupFormData) => {
     setLoading(true);
     setError(null);
 
     try {
-      await parrotClient.auth.signup({ name, email, password });
-      // Don't attempt immediate login — email must be verified first.
-      // Redirect to login with a banner telling the user to check their inbox.
+      await parrotClient.auth.signup(data);
+      notify.success("Account created successfully", {
+        description: "Check your inbox to verify your email before signing in.",
+      });
       router.push("/auth/login?message=check-email");
-    } catch (err: any) {
-      setError(err.message || "Failed to create account.");
+    } catch (err) {
+      const formattedError = ErrorHandler(err);
+      setError(formattedError);
+      notify.error(err, formattedError);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="min-h-screen bg-dash-bg text-dash-text flex transition-colors duration-200">
       <AuthLeftPanel />
 
       {/* Right — Form */}
@@ -49,7 +60,7 @@ export default function SignupPage() {
         <div className="w-full max-w-sm">
           {/* Mono label */}
           <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-5">
-            Create your workspace
+            Create your account
           </p>
 
           {/* Heading */}
@@ -57,7 +68,7 @@ export default function SignupPage() {
             Get started.
           </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Full Name */}
             <div className="space-y-2">
               <label
@@ -69,13 +80,14 @@ export default function SignupPage() {
               <input
                 id="signup-name"
                 type="text"
-                required
                 autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                {...register("name")}
                 placeholder="Jane Doe"
-                className="w-full bg-[#0a0a0a] border border-[#1A1A1A] rounded-md px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white transition-colors duration-200"
+                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
+              {errors.name && (
+                <p className="font-mono text-[11px] text-red-400">{errors.name.message}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -89,13 +101,14 @@ export default function SignupPage() {
               <input
                 id="signup-email"
                 type="email"
-                required
                 autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane@company.com"
-                className="w-full bg-[#0a0a0a] border border-[#1A1A1A] rounded-md px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white transition-colors duration-200"
+                {...register("email")}
+                placeholder="jane@parrot.dev"
+                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
+              {errors.email && (
+                <p className="font-mono text-[11px] text-red-400">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -109,23 +122,20 @@ export default function SignupPage() {
               <input
                 id="signup-password"
                 type="password"
-                required
-                minLength={8}
                 autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...register("password")}
                 placeholder="••••••••"
-                className="w-full bg-[#0a0a0a] border border-[#1A1A1A] rounded-md px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white transition-colors duration-200"
+                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
-              <p className="font-mono text-[10px] text-neutral-600">
-                Min. 8 characters
-              </p>
+              {errors.password ? (
+                <p className="font-mono text-[11px] text-red-400">{errors.password.message}</p>
+              ) : (
+                <p className="font-mono text-[10px] text-neutral-600">Min. 8 characters</p>
+              )}
             </div>
 
             {/* Error */}
-            {error && (
-              <p className="font-mono text-xs text-red-400">{error}</p>
-            )}
+            {error && <p className="font-mono text-xs text-red-400">{error}</p>}
 
             {/* Submit */}
             <button
