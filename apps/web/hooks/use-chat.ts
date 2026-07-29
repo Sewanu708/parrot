@@ -6,7 +6,7 @@ import { useSessionUser } from "./use-auth";
 /** Query hook to fetch conversation message thread */
 export function useMessages(conversationId: string | null) {
   return useQuery<MessageDto[]>({
-    queryKey: ["messages", conversationId],
+    queryKey: ["messages"],
     queryFn: async () => {
       if (!conversationId) return [];
       const res = await parrotClient.conversation.getMessages(conversationId);

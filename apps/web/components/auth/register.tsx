@@ -43,7 +43,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-dash-bg text-dash-text flex transition-colors duration-200">
+    <div className="min-h-screen bg-[#fcfcfc] dark:bg-[#191919] text-[#37352f] dark:text-[#ffffff] flex transition-colors duration-200">
       <AuthLeftPanel />
 
       {/* Right — Form */}
@@ -51,7 +51,7 @@ export default function SignupPage() {
         {/* Mobile logo */}
         <Link
           href="/"
-          className="lg:hidden flex items-center gap-2 font-bold text-xl tracking-tighter text-white mb-12"
+          className="lg:hidden flex items-center gap-2 font-bold text-xl tracking-tighter text-[#37352f] dark:text-[#ffffff] mb-12"
         >
           parrot.
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -64,7 +64,7 @@ export default function SignupPage() {
           </p>
 
           {/* Heading */}
-          <h1 className="text-2xl font-bold tracking-tighter text-white mb-8">
+          <h1 className="text-2xl font-bold tracking-tighter text-[#37352f] dark:text-[#ffffff] mb-8">
             Get started.
           </h1>
 
@@ -83,7 +83,7 @@ export default function SignupPage() {
                 autoComplete="name"
                 {...register("name")}
                 placeholder="Jane Doe"
-                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
               {errors.name && (
                 <p className="font-mono text-[11px] text-red-400">{errors.name.message}</p>
@@ -104,7 +104,7 @@ export default function SignupPage() {
                 autoComplete="email"
                 {...register("email")}
                 placeholder="jane@parrot.dev"
-                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
               {errors.email && (
                 <p className="font-mono text-[11px] text-red-400">{errors.email.message}</p>
@@ -125,7 +125,7 @@ export default function SignupPage() {
                 autoComplete="new-password"
                 {...register("password")}
                 placeholder="••••••••"
-                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
               {errors.password ? (
                 <p className="font-mono text-[11px] text-red-400">{errors.password.message}</p>
@@ -142,7 +142,7 @@ export default function SignupPage() {
               id="signup-submit"
               type="submit"
               disabled={loading}
-              className="w-full cursor-pointer bg-white text-black py-3.5 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full cursor-pointer bg-[#37352f] dark:bg-white text-white dark:text-black py-3.5 rounded-md text-sm font-medium hover:opacity-90 transition-opacity duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? "Creating account..." : "Create account →"}
             </button>
@@ -153,7 +153,7 @@ export default function SignupPage() {
             Already have an account?{" "}
             <Link
               href="/auth/login"
-              className="text-white hover:text-neutral-300 font-medium transition-colors"
+              className="text-[#37352f] dark:text-[#ffffff] hover:opacity-70 font-medium transition-opacity"
             >
               Sign in →
             </Link>

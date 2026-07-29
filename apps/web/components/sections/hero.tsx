@@ -2,20 +2,20 @@ import Link from "next/link";
 
 function TerminalBlock() {
   return (
-    <div className="w-full font-mono text-xs border border-[#1F1F1F] rounded-lg bg-[#080808] overflow-hidden shadow-2xl">
+    <div className="w-full font-mono text-xs border border-[#e9e9e7] dark:border-[#1F1F1F] rounded-lg bg-white dark:bg-[#080808] overflow-hidden shadow-2xl transition-colors duration-200">
       {/* Window chrome */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-[#1A1A1A] bg-[#0d0d0d]">
-        <div className="w-2.5 h-2.5 rounded-full bg-[#2a2a2a]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#2a2a2a]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#2a2a2a]" />
-        <span className="ml-3 text-neutral-600 text-[10px] tracking-widest uppercase">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-[#e9e9e7] dark:border-[#1A1A1A] bg-[#f7f7f5] dark:bg-[#0d0d0d] transition-colors duration-200">
+        <div className="w-2.5 h-2.5 rounded-full bg-[#d4d4d4] dark:bg-[#2a2a2a]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#d4d4d4] dark:bg-[#2a2a2a]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#d4d4d4] dark:bg-[#2a2a2a]" />
+        <span className="ml-3 text-[#37352f]/60 dark:text-neutral-600 text-[10px] tracking-widest uppercase">
           POST /api/v1/conversations
         </span>
       </div>
 
       {/* Request body */}
-      <div className="px-5 py-4 border-b border-[#1A1A1A]">
-        <div className="text-neutral-600 mb-2 text-[10px] uppercase tracking-widest">Request</div>
+      <div className="px-5 py-4 border-b border-[#e9e9e7] dark:border-[#1A1A1A] transition-colors duration-200">
+        <div className="text-[#37352f]/60 dark:text-neutral-600 mb-2 text-[10px] uppercase tracking-widest">Request</div>
         <pre className="leading-6 text-[11px]">
           <span className="text-neutral-500">{"{"}</span>{"\n"}
           <span className="text-neutral-500">{"  "}</span>
@@ -44,7 +44,7 @@ function TerminalBlock() {
       {/* Response */}
       <div className="px-5 py-4">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-[10px] uppercase tracking-widest text-neutral-600">Response</span>
+          <span className="text-[10px] uppercase tracking-widest text-[#37352f]/60 dark:text-neutral-600">Response</span>
           <span className="text-emerald-500 text-[10px] font-medium">201 Created</span>
         </div>
         <pre className="leading-6 text-[11px]">
@@ -88,12 +88,12 @@ export default function Hero() {
           </div>
 
           {/* Headline */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.05] mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-[#37352f] dark:text-[#ffffff] font-bold tracking-tighter leading-[1.05] mb-6">
             Multi-tenant customer support. Minus the bloat.
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg text-neutral-400 max-w-md mb-12">
+          <p className="text-lg text-[#37352f]/60 dark:text-[#9b9b9b] max-w-md mb-12">
             A completely isolated live chat and ticketing engine for your tenant.
             Built for scale.
           </p>
@@ -101,7 +101,7 @@ export default function Hero() {
           {/* Primary CTA */}
           <Link
             href="/auth/signup"
-            className="bg-white text-black px-8 py-4 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors inline-flex items-center w-fit"
+            className="bg-[#37352f] dark:bg-white text-white dark:text-black px-8 py-4 rounded-md text-sm font-medium hover:opacity-90 transition-opacity inline-flex items-center w-fit"
           >
             Deploy workspace →
           </Link>

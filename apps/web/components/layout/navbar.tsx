@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ThemeToggle from "@/components/theme-toggle";
 
 const navLinks = [
   { label: "About", href: "#about" },
@@ -27,9 +28,9 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 bg-black transition-all duration-300 ${
+      className={`fixed top-0 left-0 w-full z-50 bg-[#fcfcfc] dark:bg-[#191919] transition-all duration-300 ${
         scrolled || menuOpen
-          ? "border-b border-[#1A1A1A]"
+          ? "border-b border-[#e9e9e7] dark:border-[#333333]"
           : "border-b border-transparent"
       }`}
     >
@@ -38,7 +39,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2 font-bold text-xl tracking-tighter text-white"
+          className="flex items-center gap-2 font-bold text-xl tracking-tighter text-[#37352f] dark:text-[#ffffff]"
           onClick={() => setMenuOpen(false)}
         >
           parrot.
@@ -51,7 +52,7 @@ export default function Navbar() {
             <Link
               key={link.label}
               href={link.href}
-              className="text-sm text-neutral-400 hover:text-white transition-colors"
+              className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b] hover:text-[#37352f] dark:hover:text-[#ffffff] transition-colors"
             >
               {link.label}
             </Link>
@@ -59,11 +60,13 @@ export default function Navbar() {
         </nav>
 
         {/* Right side */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
+          <ThemeToggle />
+          
           {/* Login — desktop only */}
           <Link
             href="/auth/login"
-            className="hidden md:block text-sm text-neutral-400 hover:text-white font-medium transition-colors"
+            className="hidden md:block text-sm text-[#37352f]/60 dark:text-[#9b9b9b] hover:text-[#37352f] dark:hover:text-[#ffffff] font-medium transition-colors"
           >
             Log in
           </Link>
@@ -77,17 +80,17 @@ export default function Navbar() {
             aria-expanded={menuOpen}
           >
             <span
-              className={`block h-px bg-white transition-all duration-300 origin-center ${
+              className={`block h-px bg-[#37352f] dark:bg-white transition-all duration-300 origin-center ${
                 menuOpen ? "w-5 rotate-45 translate-y-[7px]" : "w-5"
               }`}
             />
             <span
-              className={`block h-px bg-white transition-all duration-200 ${
+              className={`block h-px bg-[#37352f] dark:bg-white transition-all duration-200 ${
                 menuOpen ? "w-0 opacity-0" : "w-4"
               }`}
             />
             <span
-              className={`block h-px bg-white transition-all duration-300 origin-center ${
+              className={`block h-px bg-[#37352f] dark:bg-white transition-all duration-300 origin-center ${
                 menuOpen ? "w-5 -rotate-45 -translate-y-[7px]" : "w-5"
               }`}
             />
@@ -101,21 +104,21 @@ export default function Navbar() {
           menuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
-        <nav className="flex flex-col px-6 pb-8 pt-2 border-t border-[#1A1A1A]">
+        <nav className="flex flex-col px-6 pb-8 pt-2 border-t border-[#e9e9e7] dark:border-[#333333]">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               onClick={() => setMenuOpen(false)}
-              className="text-sm text-neutral-400 hover:text-white transition-colors py-4 border-b border-[#1A1A1A]"
+              className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b] hover:text-[#37352f] dark:hover:text-[#ffffff] transition-colors py-4 border-b border-[#e9e9e7] dark:border-[#333333]"
             >
               {link.label}
             </Link>
           ))}
           <Link
-            href="/login"
+            href="/auth/login"
             onClick={() => setMenuOpen(false)}
-            className="text-sm text-white font-medium pt-6"
+            className="text-sm text-[#37352f] dark:text-[#ffffff] font-medium pt-6"
           >
             Log in →
           </Link>

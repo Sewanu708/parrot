@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
 :root {
   --background: #000000;
@@ -19,15 +20,11 @@
 }
 
 html {
-  background: #000000;
-  color: #ffffff;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: #000000;
-  color: #ffffff;
   font-family: var(--font-sans);
   letter-spacing: -0.025em; /* tracking-tight */
 }

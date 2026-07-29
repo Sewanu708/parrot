@@ -101,7 +101,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-dash-bg text-dash-text flex transition-colors duration-200">
+    <div className="min-h-screen bg-[#fcfcfc] dark:bg-[#191919] text-[#37352f] dark:text-[#ffffff] flex transition-colors duration-200">
       <AuthLeftPanel />
 
       {/* Right — Form */}
@@ -109,7 +109,7 @@ export default function LoginPage() {
         {/* Mobile logo */}
         <Link
           href="/"
-          className="lg:hidden flex items-center gap-2 font-bold text-xl tracking-tighter text-white mb-12"
+          className="lg:hidden flex items-center gap-2 font-bold text-xl tracking-tighter text-[#37352f] dark:text-[#ffffff] mb-12"
         >
           parrot.
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -122,7 +122,7 @@ export default function LoginPage() {
           </p>
 
           {/* Heading */}
-          <h1 className="text-2xl font-bold tracking-tighter text-white mb-8">
+          <h1 className="text-2xl font-bold tracking-tighter text-[#37352f] dark:text-[#ffffff] mb-8">
             Welcome back.
           </h1>
 
@@ -164,7 +164,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 {...register("email")}
                 placeholder="jane@parrot.dev"
-                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
               {errors.email && (
                 <p className="font-mono text-[11px] text-red-400">{errors.email.message}</p>
@@ -175,7 +175,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <label
                 htmlFor="login-password"
-                className="block font-mono text-[10px] uppercase tracking-widest text-dash-muted"
+                className="block font-mono text-[10px] uppercase tracking-widest text-[#37352f]/60 dark:text-[#9b9b9b]"
               >
                 Password
               </label>
@@ -185,7 +185,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 {...register("password")}
                 placeholder="••••••••"
-                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
               {errors.password && (
                 <p className="font-mono text-[11px] text-red-400">{errors.password.message}</p>
@@ -193,7 +193,7 @@ export default function LoginPage() {
               <div className="flex justify-end">
                 <Link
                   href="/auth/forgot-password"
-                  className="font-mono text-[10px] text-neutral-500 hover:text-white transition-colors"
+                  className="font-mono text-[10px] text-neutral-500 hover:text-[#37352f] dark:hover:text-[#ffffff] transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -209,7 +209,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleResend}
                     disabled={resending || resendSent}
-                    className="font-mono text-[10px] text-neutral-400 hover:text-white transition-colors disabled:opacity-40"
+                    className="font-mono text-[10px] text-neutral-400 hover:text-[#37352f] dark:hover:text-[#ffffff] transition-colors disabled:opacity-40"
                   >
                     {resendSent
                       ? "✓ Verification email sent"
@@ -226,7 +226,7 @@ export default function LoginPage() {
               id="login-submit"
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-black py-3.5 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full bg-[#37352f] dark:bg-white text-white dark:text-black py-3.5 rounded-md text-sm font-medium hover:opacity-90 transition-opacity duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign in →"}
             </button>
@@ -237,7 +237,7 @@ export default function LoginPage() {
             No account?{" "}
             <Link
               href="/auth/signup"
-              className="text-white hover:text-neutral-300 font-medium transition-colors"
+              className="text-[#37352f] dark:text-[#ffffff] hover:opacity-70 font-medium transition-opacity"
             >
               Create one →
             </Link>

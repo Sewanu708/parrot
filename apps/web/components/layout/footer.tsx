@@ -37,19 +37,18 @@ export default function Footer() {
 
   return (
     <footer
-      className="relative w-full overflow-hidden border-t border-[#1A1A1A] mt-24 bg-black"
+      className="relative w-full overflow-hidden border-t border-[#e9e9e7] dark:border-[#333333] mt-24 bg-[#fcfcfc] dark:bg-[#191919] transition-colors duration-200"
       style={{ minHeight: "clamp(280px, 40vw, 420px)" }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Giant Background Text */}
       <span
-        className="absolute top-8 left-1/2 -translate-x-1/2 pointer-events-none select-none
-          text-[18vw] font-black tracking-tighter text-transparent whitespace-nowrap leading-none"
-        style={{
-          WebkitTextStroke: `1px ${hovered ? "#ffffff" : "#2e2e2e"}`,
-          transition: "all 0.6s ease",
-        }}
+        className={`absolute top-8 left-1/2 -translate-x-1/2 pointer-events-none select-none text-[18vw] font-black tracking-tighter whitespace-nowrap leading-none transition-all duration-500 ${
+          hovered
+            ? "text-[#37352f]/10 dark:text-white/20"
+            : "text-[#37352f]/5 dark:text-white/5"
+        }`}
         aria-hidden="true"
       >
         PARROT
@@ -58,7 +57,7 @@ export default function Footer() {
       {/* Foreground Links — pinned to bottom */}
       <div className="absolute bottom-0 left-0 right-0 z-10 flex flex-col md:flex-row justify-between items-center gap-4 px-6 sm:px-8 pb-8 md:pb-10">
         {/* Copyright */}
-        <p className="font-mono text-xs text-neutral-500 uppercase tracking-widest">
+        <p className="font-mono text-xs text-[#37352f]/60 dark:text-[#9b9b9b] uppercase tracking-widest">
           © PARROT · 2026 · Privacy
         </p>
 
@@ -71,7 +70,7 @@ export default function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={label}
-              className="border border-[#333333] rounded-md p-2.5 text-neutral-400 hover:text-white hover:border-neutral-500 transition-colors flex items-center justify-center"
+              className="border border-[#e9e9e7] dark:border-[#333333] rounded-md p-2.5 text-[#37352f]/60 dark:text-[#9b9b9b] hover:text-[#37352f] dark:hover:text-[#ffffff] hover:border-[#37352f]/30 dark:hover:border-[#555555] transition-colors flex items-center justify-center"
             >
               <Icon />
             </Link>

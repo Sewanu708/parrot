@@ -139,6 +139,20 @@ export class EmailService {
         );
       }
 
+      // Bypass actual email sending in development if Resend isn't configured
+      // Just log the code/token to the terminal so the user can copy it!
+      if (env.NODE_ENV !== "production") {
+        logger.info(
+          {
+            to: options.to,
+            subject: options.subject,
+            auth_data: options.context, 
+          },
+          "[DEV BYPASS] Email intercepted! Use the code/hash above to verify."
+        );
+        return { id: "dev_mock_id" };
+      }
+
       const { data, error } = await this.resend.emails.send({
         from: DEFAULT_FROM_EMAIL,
         // to: Array.isArray(options.to) ? options.to : [options.to],

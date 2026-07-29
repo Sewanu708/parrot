@@ -6,7 +6,7 @@ import Footer from "@/components/layout/footer";
 
 export default function Home() {
   return (
-    <main className="bg-black">
+    <main className="bg-[#fcfcfc] dark:bg-[#191919] transition-colors duration-200">
       <Navbar />
       <Hero />
       <ArchSpecs />

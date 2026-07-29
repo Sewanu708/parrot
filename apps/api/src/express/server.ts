@@ -64,6 +64,7 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
   }
   function addHandler(handlerConfiguration: HandlerConfiguration) {
     const { method, path, props } = handlerConfiguration;
+    const startTime = performance.now();
     app[method](
       path,
       async (expressRequest: Request, expressResponse: Response) => {
@@ -90,12 +91,13 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
           const { body, query, params, headers } = expressRequest;
           const meta = {};
 
-          if (LOG_APP_REQUEST) {
-            logger.info(
-              createRequestLog(expressRequest),
-              `${String(method)} ${path} `,
-            );
-          }
+          
+
+          // Always log incoming requests across all flows
+          logger.info(
+            createRequestLog(expressRequest),
+            `→ INCOMING ${String(method).toUpperCase()} ${path}`
+          );
 
           const properties: RequestProperties = {
             IP: getClientIp(expressRequest),
@@ -272,6 +274,17 @@ function createServer(serverConfig: { port?: number; enableCors?: boolean }) {
               logger.error(e, `onResponseEnd error`);
             }
           }
+          
+          const duration = Math.round(performance.now() - startTime);
+          logger.info(
+            { 
+              statusCode: responseComponents.statusCode, 
+              durationMs: duration, 
+              path, 
+              method: String(method).toUpperCase() 
+            },
+            `← COMPLETED ${responseComponents.statusCode} ${String(method).toUpperCase()} ${path} in ${duration}ms`
+          );
         }
       },
     );

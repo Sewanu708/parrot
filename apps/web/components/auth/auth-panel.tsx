@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default function AuthLeftPanel() {
   return (
@@ -17,16 +18,19 @@ export default function AuthLeftPanel() {
       {/* Logo */}
       <Link
         href="/"
-        className="relative z-10 flex items-center gap-2 font-bold text-xl tracking-tighter text-white w-fit"
+        className="relative z-10 flex items-center gap-2 font-bold text-xl tracking-tighter text-[#37352f] dark:text-[#ffffff] w-fit"
       >
         parrot.
         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
       </Link>
 
-      {/* Bottom label */}
-      <p className="relative z-10 font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-        PARROT · V1 
-      </p>
+      {/* Bottom row */}
+      <div className="relative z-10 flex items-center justify-between w-full">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
+          PARROT · V1 
+        </p>
+        <ThemeToggle />
+      </div>
     </div>
   );
 }

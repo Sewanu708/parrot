@@ -11,12 +11,13 @@ declare module "next-auth" {
       email: string;
       name: string;
       tenants: Array<{ id: string; name: string }>;
+      sessionToken?: string;
     } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
     id: string;
-    token: string;
+    sessionToken: string;
     name: string;
     email: string;
     tenants: Array<{ id: string; name: string }>;
@@ -27,7 +28,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     id: string;
-    token: string;
+    sessionToken: string;
     name: string;
     email: string;
     tenants: Array<{ id: string; name: string }>;
@@ -60,11 +61,14 @@ export const authOptions: AuthOptions = {
           const activeTenantId = lastActiveTenantId ?? tenants[0]?.id ?? null;
           parrotClient.setToken(token);
           parrotClient.setTenantId(activeTenantId);
+          parrotClient.ws.connect({
+            type: "agent",
+          });
           return {
             id: user.id,
             name: user.name,
             email: user.email,
-            token,
+            sessionToken:token,
             tenants,
             activeTenantId,
           };
@@ -83,8 +87,9 @@ export const authOptions: AuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.tenants = (user as any).tenants;
-        token.activeTenantId = (user as any).activeTenantId;
+        token.tenants = (user).tenants;
+        token.activeTenantId = (user).activeTenantId;
+        token.sessionToken = (user).sessionToken;
       }
       return token;
     },
@@ -96,6 +101,7 @@ export const authOptions: AuthOptions = {
         email: token.email,
         activeTenantId: token.activeTenantId,
         tenants: token.tenants,
+        sessionToken: token.sessionToken,
       };
       // session.tenants = token.tenants as any[];
       // session.activeTenantId = token.activeTenantId as string | null;
