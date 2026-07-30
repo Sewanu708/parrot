@@ -1,6 +1,7 @@
 "use client";
 
 import { ParrotClient } from "@parrot/sdk";
+import type { ConversationWithVisitorDto, MessageDto } from "@parrot/sdk";
 import { useSession } from "next-auth/react";
 import { createContext, useContext, useEffect } from "react";
 import { parrotClient } from "./parrot";
@@ -28,11 +29,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         // 1. Inject the new message directly into the active chat's cache
         queryClient.setQueryData(
           ["messages", data?.conversationId], 
-          (oldData: any) => {
+          (oldData: { data: MessageDto[] } | undefined) => {
             if (!oldData?.data) return oldData; // Not fetched yet
             
             // Prevent duplicates
-            const exists = oldData.data.some((msg: any) => msg.id === data.id);
+            const exists = oldData.data.some((msg: MessageDto) => msg.id === data.id);
             if (exists) return oldData;
             
             return {
@@ -45,10 +46,10 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
         // 2. Bump the conversation to the top of the sidebar cache
         queryClient.setQueryData(
           ["conversations"],
-          (oldData: any) => {
+          (oldData: { data: ConversationWithVisitorDto[] } | undefined) => {
             if (!oldData?.data) return oldData;
             
-            const convIndex = oldData.data.findIndex((c: any) => c.conversation.id === data.conversationId);
+            const convIndex = oldData.data.findIndex((c: ConversationWithVisitorDto) => c.conversation.id === data.conversationId);
             if (convIndex === -1) {
               // Brand new conversation we don't have visitor details for; gracefully fallback to refetch
               queryClient.invalidateQueries({ queryKey: ["conversations"] });

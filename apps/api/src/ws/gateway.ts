@@ -1,6 +1,9 @@
 import { WebSocket, WebSocketServer } from "ws";
 import type { Server as HTTPServer } from "node:http";
 import { logger } from "../logger";
+import { db } from "@parrot/db/src/config";
+import { conversations } from "@parrot/db/src/schema";
+import { eq } from "drizzle-orm";
 
 export interface WSEvent<T = any> {
   event: string;
@@ -41,6 +44,34 @@ export class WSGateway {
         socket.close(4000, "Missing client identification params");
         return;
       }
+
+      socket.on("message", (rawData) => {
+        try {
+          logger.info("Message received!!!")
+          const parsed = JSON.parse(rawData.toString());
+          const { type, payload } = parsed;
+
+          // Route ephemeral events
+          if (type === "typing:start" || type === "typing:stop") {
+            if (payload.targetVisitorId) {
+              this.sendToVisitor(payload.targetVisitorId, { event: type, data: payload });
+            } else if (payload.targetTenantId) {
+              this.broadcastToTenant(payload.targetTenantId, { event: type, data: payload });
+            } else if (payload.conversationId && payload.senderType === "visitor") {
+              // Fallback: look up tenantId from DB
+              this.getTenantIdFromConversation(payload.conversationId)
+                .then((tenantId) => {
+                  if (tenantId) {
+                    this.broadcastToTenant(tenantId, { event: type, data: payload });
+                  }
+                })
+                .catch((err) => logger.error({ err }, "Failed to lookup tenantId for WS event"));
+            }
+          }
+        } catch (err) {
+          logger.error({ err }, "Failed to process incoming WS message");
+        }
+      });
 
       socket.on("close", () => {
         if (tenantId) this.unregisterAgent(tenantId, socket);
@@ -117,6 +148,18 @@ export class WSGateway {
         socket.send(messageStr);
       }
     }
+  }
+
+  /**
+   * Helper function to fetch a tenantId given a conversationId
+   */
+  async getTenantIdFromConversation(conversationId: string): Promise<string | null> {
+    const [conversation] = await db
+      .select({ tenantId: conversations.tenantId })
+      .from(conversations)
+      .where(eq(conversations.id, conversationId));
+    
+    return conversation?.tenantId || null;
   }
 }
 

@@ -13,7 +13,6 @@ class Parrot {
   private visitorId: string;
   private conversationId: string | null = null;
   private apiHost: string = "http://localhost:8080";
-  private wsHost: string = "ws://localhost:8080";
 
   private client: ParrotClient;
   private messages: WidgetMessage[] = [];
@@ -54,20 +53,12 @@ class Parrot {
       document.querySelector("script[data-widget-key]");
 
     if (script) {
-      this.propertyId =
-        script.getAttribute("data-property-id") ||
-        script.getAttribute("data-widget-key");
-      this.tenantId = script.getAttribute("data-tenant-id");
-      const customApi = script.getAttribute("data-api-host");
-      if (customApi) {
-        this.apiHost = customApi;
-        this.wsHost = customApi.replace(/^http/, "ws");
-      }
+      this.propertyId = script.getAttribute("data-property-id");
     }
 
     if (!this.propertyId) {
       console.warn(
-        "[Parrot Widget] Missing data-property-id or data-widget-key attribute.",
+        "[Parrot Widget] Missing data-property-id attribute.",
       );
     }
   }
@@ -100,6 +91,20 @@ class Parrot {
           createdAt: data.createdAt,
         });
       });
+
+      this.client.ws.on(
+        "typing:start",
+        (data: { conversationId: string; senderType: string }) => {
+          if (
+            data.conversationId === this.conversationId &&
+            data.senderType === "agent"
+          ) {
+            this.showTypingIndicator();
+          }
+
+          console.log('[RECEIVED MESSAGE')
+        },
+      );
 
       this.client.ws.on("error", (error) => {
         console.error("[Parrot Widget] WebSocket error:", error);
@@ -177,8 +182,40 @@ class Parrot {
     // Prevent duplicate rendering of visitor's own message sent via HTTP
     if (msg.senderType === "visitor") return;
 
+    this.hideTypingIndicator();
+
     this.messages.push(msg);
     this.renderMessages();
+  }
+
+  private typingTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  private showTypingIndicator() {
+    if (!this.shadowRoot) return;
+    let indicator = this.shadowRoot.getElementById("typing-indicator");
+    if (!indicator) {
+      indicator = document.createElement("div");
+      indicator.id = "typing-indicator";
+      indicator.className = "typing-indicator";
+      indicator.innerText = "Agent is typing...";
+
+      const chatMessages = this.shadowRoot.getElementById("messages-container");
+      chatMessages?.appendChild(indicator);
+      chatMessages!.scrollTop = chatMessages!.scrollHeight;
+    }
+
+    if (this.typingTimeout) clearTimeout(this.typingTimeout);
+    this.typingTimeout = setTimeout(() => {
+      this.hideTypingIndicator();
+    }, 3000);
+  }
+
+  private hideTypingIndicator() {
+    if (!this.shadowRoot) return;
+    const indicator = this.shadowRoot.getElementById("typing-indicator");
+    if (indicator && indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator);
+    }
   }
 
   /**
@@ -305,6 +342,19 @@ class Parrot {
           cursor: pointer;
           font-weight: bold;
         }
+
+        .typing-indicator {
+          font-size: 12px;
+          color: #6b7280;
+          font-style: italic;
+          padding: 4px 14px;
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+          align-self: flex-start;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: .5; }
+        }
       </style>
 
       <div class="chat-window" id="chat-window">
@@ -360,6 +410,17 @@ class Parrot {
     sendBtn?.addEventListener("click", handleSend);
     chatInput?.addEventListener("keypress", (e) => {
       if (e.key === "Enter") handleSend();
+    });
+
+    let lastTypingEmit = 0;
+    chatInput?.addEventListener("input", () => {
+      if (Date.now() - lastTypingEmit > 2000 && this.conversationId) {
+        this.client.ws.emit("typing:start", {
+          conversationId: this.conversationId,
+          senderType: "visitor"
+        });
+        lastTypingEmit = Date.now();
+      }
     });
   }
 
