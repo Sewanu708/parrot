@@ -7,10 +7,7 @@ import { parrotClient } from "@/lib/parrot";
 import { useSession } from "next-auth/react";
 import notify from "@/lib/toast";
 
-export function BrandSettings() {
-  const { data: session } = useSession();
-  const propertyId = session?.user?.defaultPropertyId; 
-  
+export function BrandSettings({ propertyId }: { propertyId?: string }) {
   const [logo, setLogo] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 

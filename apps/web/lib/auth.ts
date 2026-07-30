@@ -10,7 +10,7 @@ declare module "next-auth" {
       activeTenantId: string | null;
       email: string;
       name: string;
-      tenants: Array<{ id: string; name: string }>;
+      tenants: Array<{ id: string; name: string; logoUrl?: string }>;
       sessionToken?: string;
       defaultPropertyId?: string;
     } & DefaultSession["user"];
@@ -21,7 +21,7 @@ declare module "next-auth" {
     sessionToken: string;
     name: string;
     email: string;
-    tenants: Array<{ id: string; name: string }>;
+    tenants: Array<{ id: string; name: string; logoUrl?: string }>;
     activeTenantId: string | null;
     defaultPropertyId?: string;
   }
@@ -33,7 +33,7 @@ declare module "next-auth/jwt" {
     sessionToken: string;
     name: string;
     email: string;
-    tenants: Array<{ id: string; name: string }>;
+    tenants: Array<{ id: string; name: string; logoUrl?: string }>;
     activeTenantId: string | null;
     defaultPropertyId?: string;
   }
@@ -84,7 +84,7 @@ export const authOptions: AuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Runs on initial sign-in; persist API data into the JWT
       if (user) {
         token.id = user.id;
@@ -93,6 +93,16 @@ export const authOptions: AuthOptions = {
         token.tenants = user.tenants;
         token.activeTenantId = user.activeTenantId;
         token.sessionToken = user.sessionToken;
+      }
+
+      // Handle update() from client
+      if (trigger === "update" && session?.user) {
+        if (session.user.tenants) {
+          token.tenants = session.user.tenants;
+        }
+        if (session.user.activeTenantId !== undefined) {
+          token.activeTenantId = session.user.activeTenantId;
+        }
       }
       return token;
     },

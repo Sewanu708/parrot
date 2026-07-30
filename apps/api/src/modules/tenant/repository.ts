@@ -16,6 +16,7 @@ export class TenantRepository {
         .insert(tenants)
         .values({
           name: data.name,
+          logoUrl: data.logoUrl,
         })
         .returning();
 
@@ -28,7 +29,7 @@ export class TenantRepository {
         .insert(properties)
         .values({
           tenantId: newTenant.id,
-          name: `${data.name} Default Property`,
+          name: data.propertyName,
           domain: data.domain,
           supportEmail: data.supportEmail,
           brandColor: data.brandColor,
@@ -105,6 +106,15 @@ export class TenantRepository {
       .returning();
 
     return updatedProperty;
+  }
+
+  // Get properties for a tenant
+  async getPropertiesByTenantId(tenantId: string) {
+    return db
+      .select()
+      .from(properties)
+      .where(eq(properties.tenantId, tenantId))
+      .orderBy(properties.createdAt);
   }
 }
 

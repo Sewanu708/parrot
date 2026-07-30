@@ -70,6 +70,8 @@ export const tenants = pgTable("tenants", {
     .notNull()
     .defaultNow(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
+
+  logoUrl: text("logo_url"),
 });
 
 export const roles = pgTable(

@@ -19,5 +19,9 @@ export class TenantModule {
   async updateProperty(propertyId: string, input: UpdatePropertyDto) {
     return this.http.patch<PropertyDto>(`/properties/${propertyId}`, input);
   }
+
+  async getProperties(tenantId: string) {
+    return this.http.get<PropertyDto[]>(`/tenants/${tenantId}/properties`);
+  }
 }
 

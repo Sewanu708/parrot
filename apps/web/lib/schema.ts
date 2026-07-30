@@ -26,6 +26,7 @@ export type SignupFormData = z.infer<typeof signupSchema>;
  */
 export const createWorkspaceSchema = z.object({
   name: z.string().min(2, "Workspace name must be at least 2 characters"),
+  propertyName: z.string().min(2, "Property name must be at least 2 characters"),
   domain: z.string().optional(),
   supportEmail: z
     .string()
@@ -36,7 +37,17 @@ export const createWorkspaceSchema = z.object({
     .string()
     .regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Please select a valid hex color")
     .optional(),
+  logoUrl: z.string().url().optional(),
 });
 
 export type CreateWorkspaceFormData = z.infer<typeof createWorkspaceSchema>;
 
+
+
+export const GeneralSettingsSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  domain: z.string().max(255).optional().or(z.literal("")),
+  supportEmail: z.email("Invalid email").optional().or(z.literal("")),
+});
+
+export type GeneralSettingsFormData = z.infer<typeof GeneralSettingsSchema>;

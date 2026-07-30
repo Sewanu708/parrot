@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/header";
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { parrotClient } from "@/lib/parrot";
+import { useSession } from "next-auth/react";
 import { InboxSidebar } from "./inbox/sidebar";
 import { ChatArea } from "./inbox/chat-area";
 import { useSendMessage } from "@/hooks";
@@ -15,6 +16,16 @@ export default function InboxPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastTypingEmitRef = useRef<number>(0);
+  const { data: session } = useSession();
+  const activeTenantId = session?.user?.activeTenantId;
+
+  // Fetch properties for the unified inbox
+  const { data: propertiesResponse } = useQuery({
+    queryKey: ["properties", activeTenantId],
+    queryFn: () => parrotClient.tenant.getProperties(activeTenantId!),
+    enabled: !!activeTenantId,
+  });
+  const properties = propertiesResponse?.data || [];
 
   // Fetch conversations
   const { data: conversationsResponse } = useQuery({
@@ -110,6 +121,7 @@ export default function InboxPage() {
       <div className="flex flex-1 overflow-hidden border-t border-[#e9e9e7] dark:border-[#2d2d2d] mt-2">
         <InboxSidebar 
           conversations={conversations} 
+          properties={properties}
           activeChat={activeChat} 
           onSelectChat={setActiveChat} 
           className={`${activeChat ? "hidden md:flex" : "flex w-full"} md:w-[320px]`}

@@ -4,6 +4,6 @@ packages:
 allowBuilds:
   bcrypt: false
   esbuild: false
-  msgpackr-extract: set this to true or false
+  msgpackr-extract: true
   sharp: false
   unrs-resolver: false

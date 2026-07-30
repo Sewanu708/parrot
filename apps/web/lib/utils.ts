@@ -31,3 +31,9 @@ export function getParrotPublicCode(err: unknown): string | undefined {
   return undefined;
 }
 
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}

@@ -116,4 +116,28 @@ export class TenantController {
       data: updatedProperty,
     };
   }
+
+  static async getProperties(req: RequestComponents): Promise<HandlerResult> {
+    const tenantId = req.params.tenantId;
+    const userId = req.meta.user?.id;
+
+    if (!userId) {
+      appError("Unauthorized", ERROR_CODE.NOAUTHERR, { code: "SL07" });
+    }
+
+    const isMember = await tenantRepository.isUserMemberOfTenant(
+      userId,
+      tenantId,
+    );
+    if (!isMember) {
+      appError("Forbidden", ERROR_CODE.PERMERR, { code: "SL09" });
+    }
+
+    const properties = await tenantRepository.getPropertiesByTenantId(tenantId);
+
+    return {
+      status: 200,
+      data: properties,
+    };
+  }
 }

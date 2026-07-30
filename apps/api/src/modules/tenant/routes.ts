@@ -33,9 +33,17 @@ export const updatePropertyRoute = expressHandler({
   handler: TenantController.updateProperty.bind(TenantController),
 });
 
+export const getPropertiesRoute = expressHandler({
+  method: "get",
+  path: "/tenants/:tenantId/properties",
+  middlewares: [requireAuth, authenticatedLimiter],
+  handler: TenantController.getProperties.bind(TenantController),
+});
+
 export const tenantRoutes = [
   createTenantRoute,
   getTenantRoute,
   updateTenantRoute,
   updatePropertyRoute,
+  getPropertiesRoute,
 ];

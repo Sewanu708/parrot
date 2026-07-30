@@ -31,11 +31,21 @@ body {
 
 /* Global text selection override */
 ::selection {
+  background-color: #2b2b2b;
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background-color: #2b2b2b;
+  color: #ffffff;
+}
+
+.dark ::selection {
   background-color: #ffffff;
   color: #000000;
 }
 
-::-moz-selection {
+.dark ::-moz-selection {
   background-color: #ffffff;
   color: #000000;
 }

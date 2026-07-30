@@ -10,6 +10,7 @@ import { loginSchema, type LoginFormData } from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
 import notify from "@/lib/toast";
 import AuthLeftPanel from "@/components/auth/auth-panel";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,11 +24,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
     getValues,
+    reset,
     formState: { errors },
   } = useForm<LoginFormData>({
     
@@ -72,8 +75,10 @@ export default function LoginPage() {
     const tenants = session?.user?.tenants ?? [];
 
     if (tenants.length > 0) {
+      reset();
       router.push(callbackUrl);
     } else {
+      reset();
       router.push("/create-workspace");
     }
     router.refresh();
@@ -179,14 +184,23 @@ export default function LoginPage() {
               >
                 Password
               </label>
-              <input
-                id="login-password"
-                type="password"
-                autoComplete="current-password"
-                {...register("password")}
-                placeholder="••••••••"
-                className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
-              />
+              <div className="relative">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  {...register("password")}
+                  placeholder="••••••••"
+                  className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               {errors.password && (
                 <p className="font-mono text-[11px] text-red-400">{errors.password.message}</p>
               )}

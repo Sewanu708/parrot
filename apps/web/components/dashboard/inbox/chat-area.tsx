@@ -1,6 +1,7 @@
 import type { ConversationWithVisitorDto, MessageDto } from "@parrot/sdk";
 import { ParrotEmptyIcon } from "@/components/icons";
 import { UIMessage } from "@/hooks";
+import TextareaAutosize from "react-textarea-autosize";
 
 interface ChatAreaProps {
   activeConversation?: ConversationWithVisitorDto;
@@ -134,14 +135,16 @@ export function ChatArea({
       {/* Input Area */}
       <div className="p-4 bg-white dark:bg-[#191919]">
         <div className="border border-[#e9e9e7] dark:border-[#333333] rounded-lg p-2 focus-within:border-[#37352f] dark:focus-within:border-white transition-colors shadow-sm bg-white dark:bg-[#202020]">
-          <textarea
+          <TextareaAutosize
             className="w-full bg-transparent resize-none outline-none text-sm p-2 text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777]"
-            rows={2}
+            minRows={2}
+            maxRows={8}
             placeholder="Reply..."
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
                 onSend();
               }
             }}

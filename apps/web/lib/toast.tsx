@@ -152,7 +152,7 @@ export const notify = {
           action={options?.action}
         />
       ),
-      { duration: Infinity }
+      { duration: 5000 }
     );
   },
 
