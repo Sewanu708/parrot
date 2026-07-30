@@ -17,11 +17,8 @@ export type UpdateTenantDto = z.infer<typeof UpdateTenantSchema>;
 export interface TenantDto {
   id: string;
   name: string;
-  domain: string | null;
-  supportEmail: string | null;
-  brandColor: string | null;
-  logoUrl: string | null;
   createdAt: string;
   updatedAt: string;
+  defaultPropertyId?: string;
 }
 

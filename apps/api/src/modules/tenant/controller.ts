@@ -17,13 +17,16 @@ export class TenantController {
     const data = req.body as CreateTenantDto;
 
     try {
-      const tenant = await tenantRepository.createTenantWithOwner(userId, data);
+      const { tenant, defaultProperty } = await tenantRepository.createTenantWithOwner(userId, data);
 
       void AuthRepository.updateActiveSession(session.id, tenant.id);
       return {
         status: 201,
         message: "Tenant created successfully",
-        data: tenant,
+        data: {
+          ...tenant,
+          defaultPropertyId: defaultProperty.id,
+        },
       };
     } catch (error) {
       appError("Failed to create tenant", ERROR_CODE.APPERR, {

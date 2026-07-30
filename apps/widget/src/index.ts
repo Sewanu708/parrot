@@ -16,7 +16,6 @@ class Parrot {
   private wsHost: string = "ws://localhost:8080";
 
   private client: ParrotClient;
-  private socket: WebSocket | null = null;
   private messages: WidgetMessage[] = [];
 
   private shadowRoot: ShadowRoot | null = null;
@@ -85,38 +84,26 @@ class Parrot {
     return id;
   }
 
-  /**
-   * Establish real-time WebSocket connection to receive agent replies
-   */
   private connectWebSocket() {
     try {
-      const wsUrl = `${this.wsHost}/ws?type=visitor&visitorId=${this.visitorId}`;
-      this.socket = new WebSocket(wsUrl);
+      this.client.ws.connect({ type: "visitor", visitorId: this.visitorId });
 
-      this.socket.onopen = () => {
+      this.client.ws.on("connect", () => {
         console.log("[Parrot Widget] WebSocket connected.");
-      };
+      });
 
-      this.socket.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          if (payload.event === "message:new" && payload.data) {
-            this.handleIncomingMessage({
-              id: payload.data.id,
-              senderType: payload.data.senderType,
-              body: payload.data.body,
-              createdAt: payload.data.createdAt,
-            });
-          }
-        } catch (e) {
-          console.error("[Parrot Widget] Error parsing WS event:", e);
-        }
-      };
+      this.client.ws.on("message:new", (data) => {
+        this.handleIncomingMessage({
+          id: data.id,
+          senderType: data.senderType,
+          body: data.body,
+          createdAt: data.createdAt,
+        });
+      });
 
-      this.socket.onclose = () => {
-        // Auto-reconnect after 3 seconds
-        setTimeout(() => this.connectWebSocket(), 3000);
-      };
+      this.client.ws.on("error", (error) => {
+        console.error("[Parrot Widget] WebSocket error:", error);
+      });
     } catch (e) {
       console.error("[Parrot Widget] Failed to initialize WebSocket:", e);
     }

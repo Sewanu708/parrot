@@ -22,7 +22,7 @@ export class ConversationRepository {
       const [property] = await tx
         .select()
         .from(properties)
-        .where(eq(properties.widgetKey, data.propertyId));
+        .where(eq(properties.id, data.propertyId));
 
       if (!property) {
         appError("Property not found", ERROR_CODE.NOTFOUND, {

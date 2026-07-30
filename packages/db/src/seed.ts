@@ -35,9 +35,6 @@ async function main() {
     .insert(tenants)
     .values({
       name: "Acme Corp",
-      domain: "acme.com",
-      supportEmail: "support@acme.com",
-      brandColor: "#4f46e5",
     })
     .returning();
 
@@ -86,7 +83,8 @@ async function main() {
       tenantId: tenant.id,
       name: "Acme Store Website",
       domain: "acme.com",
-      widgetKey: "eaaeef31-c9f8-4960-ae65-ffb4e1aa1003",
+      supportEmail: "support@acme.com",
+      brandColor: "#4f46e5",
     })
     .returning();
 
@@ -131,7 +129,7 @@ async function main() {
   console.log("✅ Seeding completed successfully!");
   console.log("----------------------------------------");
   console.log(`Demo Tenant ID : ${tenant.id}`);
-  console.log(`Property Key   : ${property.widgetKey}`);
+  console.log(`Property ID    : ${property.id}`);
   console.log(`Agent Login    : agent@acme.com / password123`);
   console.log("----------------------------------------");
   process.exit(0);

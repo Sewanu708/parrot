@@ -4,6 +4,8 @@ export interface ParrotClientOptions {
   baseUrl?: string;
   token?: string;
   tenantId?: string;
+  getToken?: () => Promise<string | undefined> | string | undefined;
+  getTenantId?: () => Promise<string | undefined> | string | undefined;
   headers?: Record<string, string>;
   fetchFn?: typeof fetch;
 }
@@ -47,6 +49,8 @@ export class HttpClient {
   private baseUrl: string;
   private token?: string;
   private tenantId?: string;
+  private getTokenFn?: () => Promise<string | undefined> | string | undefined;
+  private getTenantIdFn?: () => Promise<string | undefined> | string | undefined;
   private customHeaders: Record<string, string>;
   private fetchFn: typeof fetch;
 
@@ -61,6 +65,8 @@ export class HttpClient {
     this.baseUrl = rawUrl.replace(/\/$/, "");
     this.token = options.token;
     this.tenantId = options.tenantId;
+    this.getTokenFn = options.getToken;
+    this.getTenantIdFn = options.getTenantId;
     this.customHeaders = options.headers || {};
     this.fetchFn = options.fetchFn || globalThis.fetch.bind(globalThis);
   }
@@ -103,12 +109,15 @@ export class HttpClient {
       ...options.headers,
     };
 
-    if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
+    const resolvedToken = this.getTokenFn ? await this.getTokenFn() : this.token;
+    if (resolvedToken) {
+      headers["Authorization"] = `Bearer ${resolvedToken}`;
     }
 
-    if (this.tenantId) {
-      headers["x-tenant-id"] = this.tenantId;
+    const resolvedTenantId = this.getTenantIdFn ? await this.getTenantIdFn() : this.tenantId;
+    console.log(`This is tenant ${resolvedTenantId}`)
+    if (resolvedTenantId) {
+      headers["x-tenant-id"] = resolvedTenantId;
     }
 
     const response = await this.fetchFn(url, {

@@ -104,7 +104,6 @@ export class AuthRepository {
       .select({
         id: tenants.id,
         name: tenants.name,
-        domain: tenants.domain,
         role: roles.name,
       })
       .from(tenantMembers)

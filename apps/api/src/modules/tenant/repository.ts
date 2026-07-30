@@ -1,5 +1,10 @@
 import { db } from "@parrot/db/src/config";
-import { tenants, tenantMembers, roles } from "@parrot/db/src/schema";
+import {
+  tenants,
+  tenantMembers,
+  roles,
+  properties,
+} from "@parrot/db/src/schema";
 import { eq, and } from "drizzle-orm";
 import type { CreateTenantDto, UpdateTenantDto } from "@parrot/sdk";
 
@@ -11,16 +16,26 @@ export class TenantRepository {
         .insert(tenants)
         .values({
           name: data.name,
-          domain: data.domain,
-          supportEmail: data.supportEmail,
-          brandColor: data.brandColor,
-          logoUrl: data.logoUrl,
         })
         .returning();
 
       if (!newTenant) {
         throw new Error("Failed to create tenant");
       }
+
+      // 1b. Auto-provision the Default Property
+      const [newProperty] =await tx
+        .insert(properties)
+        .values({
+          tenantId: newTenant.id,
+          name: `${data.name} Default Property`,
+          domain: data.domain,
+          supportEmail: data.supportEmail,
+          brandColor: data.brandColor,
+          logoUrl: data.logoUrl,
+          settings: {},
+        })
+        .returning();
 
       // 2. Create default roles (Owner, Admin, Agent)
       const [ownerRole] = await tx
@@ -39,7 +54,7 @@ export class TenantRepository {
         roleId: ownerRole.id,
       });
 
-      return newTenant;
+      return { tenant: newTenant, defaultProperty: newProperty };
     });
   }
 
@@ -70,7 +85,10 @@ export class TenantRepository {
       .select()
       .from(tenantMembers)
       .where(
-        and(eq(tenantMembers.userId, userId), eq(tenantMembers.tenantId, tenantId))
+        and(
+          eq(tenantMembers.userId, userId),
+          eq(tenantMembers.tenantId, tenantId),
+        ),
       );
     return !!member;
   }

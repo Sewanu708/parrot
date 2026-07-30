@@ -45,7 +45,7 @@ class WsClient {
     if (this.ws || this.isConnecting) return;
     this.isConnecting = true;
     try {
-      const standardUrl = new URL(this.url);
+      const standardUrl = new URL(`${this.url}/ws`);
       if (this.token) standardUrl.searchParams.append("token", this.token);
       if (this.tenantId)
         standardUrl.searchParams.append("tenantId", this.tenantId);
@@ -77,12 +77,12 @@ class WsClient {
 
       this.ws.onmessage = (event) => {
         try {
-          const parsedData = JSON.parse(event?.data) as {
-            type: string;
-            payload: any;
-          };
-          if (parsedData.type) {
-            this._trigger(parsedData?.type, parsedData.payload);
+          const parsedData = JSON.parse(event?.data);
+          const type = parsedData.type || parsedData.event;
+          const payload = parsedData.payload !== undefined ? parsedData.payload : parsedData.data;
+          
+          if (type) {
+            this._trigger(type, payload);
           }
         } catch (error) {
           console.error("Failed to parse WebSocket message", error);

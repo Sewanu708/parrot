@@ -23,9 +23,51 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       parrotClient.ws.connect({ type: "agent" });
 
       parrotClient.ws.on("message:new", (data) => {
-        queryClient.invalidateQueries({ queryKey: ["messages"] });
-        queryClient.invalidateQueries({ queryKey: ["conversations"] });
-        console.log(`message received, ${data}`);
+        console.log("WebSocket message received:", data);
+        
+        // 1. Inject the new message directly into the active chat's cache
+        queryClient.setQueryData(
+          ["messages", data?.conversationId], 
+          (oldData: any) => {
+            if (!oldData?.data) return oldData; // Not fetched yet
+            
+            // Prevent duplicates
+            const exists = oldData.data.some((msg: any) => msg.id === data.id);
+            if (exists) return oldData;
+            
+            return {
+              ...oldData,
+              data: [...oldData.data, data] // Append new message
+            };
+          }
+        );
+
+        // 2. Bump the conversation to the top of the sidebar cache
+        queryClient.setQueryData(
+          ["conversations"],
+          (oldData: any) => {
+            if (!oldData?.data) return oldData;
+            
+            const convIndex = oldData.data.findIndex((c: any) => c.conversation.id === data.conversationId);
+            if (convIndex === -1) {
+              // Brand new conversation we don't have visitor details for; gracefully fallback to refetch
+              queryClient.invalidateQueries({ queryKey: ["conversations"] });
+              return oldData;
+            }
+            
+            // Remove it from current position and move to the top
+            const newData = [...oldData.data];
+            const [updatedConv] = newData.splice(convIndex, 1);
+            
+            // Update timestamp
+            updatedConv.conversation.updatedAt = data.createdAt;
+            
+            return {
+              ...oldData,
+              data: [updatedConv, ...newData] // Top of the list
+            };
+          }
+        );
       });
     } else if (status !== "authenticated") {
       console.log("Disconnecting WebSocket due to unauthenticated status.");

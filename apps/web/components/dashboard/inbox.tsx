@@ -5,11 +5,11 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { parrotClient } from "@/lib/parrot";
 import { ParrotEmptyIcon } from "@/components/icons";
+import { useSendMessage } from "@/hooks/useSendMessage";
 
 export default function InboxPage() {
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
-  const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations
@@ -39,23 +39,8 @@ export default function InboxPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Send message mutation
-  const sendMessageMutation = useMutation({
-    mutationFn: (body: string) => {
-      const conv = conversations.find((c) => c.conversation.id === activeChat);
-      if (!conv) throw new Error("Conversation not found");
-
-      return parrotClient.conversation.sendMessage({
-        conversationId: activeChat!,
-        propertyId: conv.visitor.propertyId,
-        body,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["messages", activeChat] });
-      setDraft("");
-    },
-  });
+  // Send message mutation with Optimistic UI
+  const sendMessageMutation = useSendMessage(activeChat, conversations, () => setDraft(""));
 
   const handleSend = () => {
     if (draft.trim() && activeChat) {
@@ -110,9 +95,8 @@ export default function InboxPage() {
           {/* Conversations */}
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full p-4 text-[#37352f]/40 dark:text-[#555555]">
-                <ParrotEmptyIcon className="w-12 h-12 mb-3 opacity-50" />
-                <span className="text-sm font-medium">No open conversations</span>
+              <div className="p-4 text-sm text-[#37352f]/50 dark:text-[#777777] text-center mt-4">
+                No open conversations.
               </div>
             ) : (
               conversations.map(({ conversation, visitor }) => {
@@ -209,7 +193,7 @@ export default function InboxPage() {
                   </span>
                 </div>
 
-                {messages.map((msg) => {
+                {messages.map((msg: any) => {
                   const isAgent = msg.senderType === "agent";
                   const initials = isAgent
                     ? "US" // Agent initials placeholder
@@ -222,7 +206,7 @@ export default function InboxPage() {
                       key={msg.id}
                       className={`flex gap-3 max-w-[80%] ${
                         isAgent ? "self-end flex-row-reverse" : "self-start"
-                      }`}
+                      } ${msg.isOptimistic ? "opacity-70" : ""}`}
                     >
                       <div className="shrink-0 w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-xs font-semibold text-[#37352f] dark:text-[#ffffff]">
                         {initials}

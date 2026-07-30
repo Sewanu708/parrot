@@ -1,10 +1,9 @@
 import { Header } from "@/components/layout/header";
-import { ParrotEmptyIcon } from "@/components/icons";
 
-export default function OverviewPage() {
+export default function AutomationsPage() {
   const breadcrumbs = [
-    { label: "Parrot Main" },
-    { label: "Overview" },
+    { label: "Parrot Main", href: "/overview" },
+    { label: "Automations" },
   ];
 
   return (
@@ -13,15 +12,14 @@ export default function OverviewPage() {
 
       <div className="flex-1 p-8 max-w-5xl mx-auto w-full mt-4">
         <h1 className="text-3xl font-bold text-[#37352f] dark:text-[#ffffff] mb-2">
-          Overview
+          Automations
         </h1>
         <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b] mb-8">
-          Your workspace at a glance.
+          Set up rules and bot replies for your widget.
         </p>
 
-        <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] text-[#37352f]/40 dark:text-[#555555] text-sm">
-          <ParrotEmptyIcon className="w-16 h-16 mb-4 opacity-50" />
-          <p>Analytics and metrics will live here.</p>
+        <div className="flex-1 flex items-center justify-center min-h-[400px] text-[#37352f]/40 dark:text-[#555555] text-sm">
+          Automation rules will live here.
         </div>
       </div>
     </div>

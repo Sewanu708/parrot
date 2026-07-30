@@ -63,10 +63,6 @@ export const propertyStatusEnum = pgEnum("property_status", [
 export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
-  domain: text("domain"),
-  supportEmail: text("support_email"),
-  brandColor: text("brand_color"),
-  logoUrl: text("logo_url"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -242,7 +238,9 @@ export const properties = pgTable(
       .references(() => tenants.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     domain: text("domain"),
-    widgetKey: text("widget_key").notNull().unique(),
+    supportEmail: text("support_email"),
+    brandColor: text("brand_color"),
+    logoUrl: text("logo_url"),
     settings: jsonb("settings").notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()

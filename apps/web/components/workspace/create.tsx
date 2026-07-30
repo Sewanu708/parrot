@@ -1,17 +1,26 @@
-"use client"
+"use client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createWorkspaceSchema, type CreateWorkspaceFormData } from "@/lib/schema";
+import {
+  createWorkspaceSchema,
+  type CreateWorkspaceFormData,
+} from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
 import notify from "@/lib/toast";
 import AuthLeftPanel from "@/components/auth/auth-panel";
 import { useCreateTenant } from "@/hooks";
+import { useState } from "react";
+import { useSession } from "next-auth/react";
 
 export default function CreateWorkspacePage() {
   const router = useRouter();
+  const { data: sessionData, update: updateSession } = useSession();
   const createTenant = useCreateTenant();
+  const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(
+    null,
+  );
 
   const {
     register,
@@ -41,13 +50,28 @@ export default function CreateWorkspacePage() {
           notify.success("Workspace created successfully", {
             description: `Welcome to ${responseData.name}`,
           });
-          router.push("/dashboard");
-          router.refresh();
+          updateSession({
+            ...sessionData,
+            user: {
+              ...sessionData?.user,
+              activeTenantId: responseData.id,
+              tenants: [
+                ...(sessionData?.user.tenants ?? []),
+                { id: responseData.id, name: responseData.name },
+              ],
+            },
+          });
+          if (responseData.defaultPropertyId) {
+            setCreatedPropertyId(responseData.defaultPropertyId);
+          } else {
+            router.push("/dashboard");
+            router.refresh();
+          }
         },
         onError: (err) => {
           notify.error(err, "Failed to create workspace");
         },
-      }
+      },
     );
   };
 
@@ -77,101 +101,140 @@ export default function CreateWorkspacePage() {
             Create your workspace.
           </h1>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            {/* Workspace / Company Name */}
-            <div className="space-y-2">
-              <label
-                htmlFor="workspace-name"
-                className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
-              >
-                Workspace Name *
-              </label>
-              <input
-                id="workspace-name"
-                type="text"
-                {...register("name")}
-                placeholder="Parrot Corp"
-                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
-              />
-              {errors.name && (
-                <p className="font-mono text-[11px] text-red-400">{errors.name.message}</p>
-              )}
-            </div>
-
-            {/* Domain */}
-            <div className="space-y-2">
-              <label
-                htmlFor="workspace-domain"
-                className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
-              >
-                Company Domain (Optional)
-              </label>
-              <input
-                id="workspace-domain"
-                type="text"
-                {...register("domain")}
-                placeholder="parrot.dev"
-                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
-              />
-              {errors.domain && (
-                <p className="font-mono text-[11px] text-red-400">{errors.domain.message}</p>
-              )}
-            </div>
-
-            {/* Support Email */}
-            <div className="space-y-2">
-              <label
-                htmlFor="workspace-email"
-                className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
-              >
-                Support Email (Optional)
-              </label>
-              <input
-                id="workspace-email"
-                type="email"
-                {...register("supportEmail")}
-                placeholder="support@parrot.dev"
-                className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
-              />
-              {errors.supportEmail && (
-                <p className="font-mono text-[11px] text-red-400">{errors.supportEmail.message}</p>
-              )}
-            </div>
-
-            {/* Brand Color */}
-            <div className="space-y-2">
-              <label
-                htmlFor="workspace-color"
-                className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
-              >
-                Widget Brand Color
-              </label>
-              <div className="flex gap-3 items-center bg-dash-panel border border-dash-border rounded-md p-2.5">
-                <input
-                  id="workspace-color"
-                  type="color"
-                  {...register("brandColor")}
-                  className="w-7 h-7 rounded bg-transparent border-0 cursor-pointer"
-                />
-                <span className="text-xs font-mono text-neutral-400">{brandColor}</span>
+          {createdPropertyId ? (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-2">
+                <p className="text-sm text-neutral-400">
+                  You're all set! Copy and paste this snippet into the{" "}
+                  <code>&lt;head&gt;</code> of your website to install the
+                  widget.
+                </p>
               </div>
-              {errors.brandColor && (
-                <p className="font-mono text-[11px] text-red-400">{errors.brandColor.message}</p>
-              )}
+              <div className="bg-black border border-dash-border rounded-md p-4 overflow-x-auto relative">
+                <pre className="text-xs text-emerald-400 font-mono whitespace-pre-wrap word-break">
+                  {`<script 
+  src="http://localhost:3000/widget.js" 
+  data-property-id="${createdPropertyId}">
+</script>`}
+                </pre>
+              </div>
+              <button
+                onClick={() => {
+                  router.push("/dashboard");
+                  router.refresh();
+                }}
+                className="w-full bg-white text-black py-3.5 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors duration-200 cursor-pointer"
+              >
+                Go to Dashboard →
+              </button>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              {/* Workspace / Company Name */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="workspace-name"
+                  className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
+                >
+                  Workspace Name *
+                </label>
+                <input
+                  id="workspace-name"
+                  type="text"
+                  {...register("name")}
+                  placeholder="Parrot Corp"
+                  className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                />
+                {errors.name && (
+                  <p className="font-mono text-[11px] text-red-400">
+                    {errors.name.message}
+                  </p>
+                )}
+              </div>
 
-            {/* Submit */}
-            <button
-              id="workspace-submit"
-              type="submit"
-              disabled={createTenant.isPending}
-              className="w-full bg-white text-black py-3.5 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {createTenant.isPending
-                ? "Creating workspace..."
-                : "Create workspace & launch →"}
-            </button>
-          </form>
+              {/* Domain */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="workspace-domain"
+                  className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
+                >
+                  Company Domain (Optional)
+                </label>
+                <input
+                  id="workspace-domain"
+                  type="text"
+                  {...register("domain")}
+                  placeholder="parrot.dev"
+                  className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                />
+                {errors.domain && (
+                  <p className="font-mono text-[11px] text-red-400">
+                    {errors.domain.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Support Email */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="workspace-email"
+                  className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
+                >
+                  Support Email (Optional)
+                </label>
+                <input
+                  id="workspace-email"
+                  type="email"
+                  {...register("supportEmail")}
+                  placeholder="support@parrot.dev"
+                  className="w-full bg-dash-panel border border-dash-border rounded-md px-4 py-3 text-sm text-dash-text placeholder-dash-muted focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                />
+                {errors.supportEmail && (
+                  <p className="font-mono text-[11px] text-red-400">
+                    {errors.supportEmail.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Brand Color */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="workspace-color"
+                  className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
+                >
+                  Widget Brand Color
+                </label>
+                <div className="flex gap-3 items-center bg-dash-panel border border-dash-border rounded-md p-2.5">
+                  <input
+                    id="workspace-color"
+                    type="color"
+                    {...register("brandColor")}
+                    className="w-7 h-7 rounded bg-transparent border-0 cursor-pointer"
+                  />
+                  <span className="text-xs font-mono text-neutral-400">
+                    {brandColor}
+                  </span>
+                </div>
+                {errors.brandColor && (
+                  <p className="font-mono text-[11px] text-red-400">
+                    {errors.brandColor.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit */}
+              <button
+                id="workspace-submit"
+                type="submit"
+                disabled={createTenant.isPending}
+                className="w-full bg-white text-black py-3.5 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {createTenant.isPending
+                  ? "Creating workspace..."
+                  : "Create workspace & launch →"}
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

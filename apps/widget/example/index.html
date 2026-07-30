@@ -1,83 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acme Corp — Customer Website Demo</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f8fafc;
-      color: #0f172a;
-    }
-    header {
-      background: #0f172a;
-      color: white;
-      padding: 20px 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    main {
-      max-width: 800px;
-      margin: 50px auto;
-      padding: 40px;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-    }
-    h1 { margin-top: 0; color: #1e293b; }
-    p { line-height: 1.6; color: #475569; }
-    .badge {
-      display: inline-block;
-      padding: 6px 14px;
-      background: #e0e7ff;
-      color: #3730a3;
-      border-radius: 9999px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .hero-btn {
-      background: #4f46e5;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 16px;
-    }
-    .hero-btn:hover { background: #4338ca; }
-  </style>
-</head>
-<body>
-  <header>
-    <h2>🛍️ Acme E-Commerce Store</h2>
-    <span class="badge">Parrot Widget Test Bed</span>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Acme Corp — Customer Website Demo</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f8fafc;
+        color: #0f172a;
+      }
+      header {
+        background: #0f172a;
+        color: white;
+        padding: 20px 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      main {
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      }
+      h1 {
+        margin-top: 0;
+        color: #1e293b;
+      }
+      p {
+        line-height: 1.6;
+        color: #475569;
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 14px;
+        background: #e0e7ff;
+        color: #3730a3;
+        border-radius: 9999px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .hero-btn {
+        background: #4f46e5;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+      }
+      .hero-btn:hover {
+        background: #4338ca;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h2>🛍️ Acme E-Commerce Store</h2>
+      <span class="badge">Parrot Widget Test Bed</span>
+    </header>
 
-  <main>
-    <h1>Welcome to Acme Store</h1>
-    <p>
-      This is a sample customer website demonstrating the <strong>Parrot Live Chat Widget</strong>.
-    </p>
-    <p>
-      Notice the floating chat button at the bottom-right corner of your screen. 
-      It is fully isolated inside a <code>Shadow DOM</code>, preventing host page CSS from breaking the chat UI!
-    </p>
+    <main>
+      <h1>Welcome to Acme Store</h1>
+      <p>
+        This is a sample customer website demonstrating the
+        <strong>Parrot Live Chat Widget</strong>.
+      </p>
+      <p>
+        Notice the floating chat button at the bottom-right corner of your
+        screen. It is fully isolated inside a <code>Shadow DOM</code>,
+        preventing host page CSS from breaking the chat UI!
+      </p>
 
-    <button class="hero-btn" onclick="alert('Product added to cart!')">Add Demo Product to Cart</button>
-  </main>
+      <button class="hero-btn" onclick="alert('Product added to cart!')">
+        Add Demo Product to Cart
+      </button>
+    </main>
 
-  <!-- Parrot Chat Widget Script Tag -->
-  <script 
-    src="../dist/widget.js" 
-    data-property-id="eaaeef31-c9f8-4960-ae65-ffb4e1aa1003"
-    data-api-host="http://localhost:8080"
-    defer>
-  </script>
-</body>
+    <!-- Parrot Chat Widget Script Tag -->
+    <script
+      src="../dist/widget.js"
+      data-property-id="67aa738e-28bf-498b-9cdb-f20c26ca37ef"
+      defer
+    ></script>
+  </body>
 </html>

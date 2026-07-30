@@ -24,7 +24,7 @@ export function proxy(req: NextRequest) {
 
   // Authenticated user hitting an auth page → redirect to dashboard
   if (isAuthPage && isLoggedIn) {
-    return NextResponse.redirect(new URL("/overview", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/dashboard", req.nextUrl.origin));
   }
 
   return NextResponse.next();

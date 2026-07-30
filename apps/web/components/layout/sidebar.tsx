@@ -23,15 +23,15 @@ const workspaces = [
 ];
 
 const navigation = [
-  { name: "Overview", href: "/overview", icon: InboxIcon }, // Re-using InboxIcon temporarily for Overview, though ideally we'd have a specific icon.
-  { name: "Inbox", href: "/inbox", icon: InboxIcon },
-  { name: "Contacts", href: "/contacts", icon: ContactsIcon },
+  { name: "Overview", href: "/dashboard", icon: InboxIcon }, // Re-using InboxIcon temporarily for Overview, though ideally we'd have a specific icon.
+  { name: "Inbox", href: "/dashboard/inbox", icon: InboxIcon },
+  { name: "Contacts", href: "/dashboard/contacts", icon: ContactsIcon },
   {
     name: "Automations",
-    href: "/automations",
+    href: "/dashboard/automations",
     icon: AutomationsIcon,
   },
-  { name: "Settings", href: "/settings", icon: SettingsIcon },
+  { name: "Settings", href: "/dashboard/settings", icon: SettingsIcon },
 ];
 
 export function Sidebar() {
