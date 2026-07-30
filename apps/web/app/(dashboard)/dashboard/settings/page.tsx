@@ -1,4 +1,5 @@
 import { Header } from "@/components/layout/header";
+import { BrandSettings } from "@/components/dashboard/settings/brand-settings";
 
 export default function SettingsPage() {
   const breadcrumbs = [
@@ -18,8 +19,8 @@ export default function SettingsPage() {
           Manage your workspace, team, and widget.
         </p>
 
-        <div className="flex-1 flex items-center justify-center min-h-[400px] text-[#37352f]/40 dark:text-[#555555] text-sm">
-          Settings will live here.
+        <div className="flex flex-col gap-6">
+          <BrandSettings />
         </div>
       </div>
     </div>

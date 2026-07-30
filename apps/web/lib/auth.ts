@@ -12,6 +12,7 @@ declare module "next-auth" {
       name: string;
       tenants: Array<{ id: string; name: string }>;
       sessionToken?: string;
+      defaultPropertyId?: string;
     } & DefaultSession["user"];
   }
 
@@ -22,6 +23,7 @@ declare module "next-auth" {
     email: string;
     tenants: Array<{ id: string; name: string }>;
     activeTenantId: string | null;
+    defaultPropertyId?: string;
   }
 }
 
@@ -33,6 +35,7 @@ declare module "next-auth/jwt" {
     email: string;
     tenants: Array<{ id: string; name: string }>;
     activeTenantId: string | null;
+    defaultPropertyId?: string;
   }
 }
 
@@ -68,7 +71,7 @@ export const authOptions: AuthOptions = {
             id: user.id,
             name: user.name,
             email: user.email,
-            sessionToken:token,
+            sessionToken: token,
             tenants,
             activeTenantId,
           };
@@ -87,9 +90,9 @@ export const authOptions: AuthOptions = {
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
-        token.tenants = (user).tenants;
-        token.activeTenantId = (user).activeTenantId;
-        token.sessionToken = (user).sessionToken;
+        token.tenants = user.tenants;
+        token.activeTenantId = user.activeTenantId;
+        token.sessionToken = user.sessionToken;
       }
       return token;
     },

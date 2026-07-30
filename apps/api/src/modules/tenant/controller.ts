@@ -2,7 +2,7 @@ import { RequestComponents, HandlerResult } from "../../express/types";
 import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
 import { tenantRepository } from "./repository";
-import type { CreateTenantDto, UpdateTenantDto } from "@parrot/sdk";
+import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto } from "@parrot/sdk";
 import { AuthRepository } from "../auth/repository";
 import { Session, User } from "@parrot/db/src/schema";
 
@@ -91,6 +91,29 @@ export class TenantController {
       status: 200,
       message: "Tenant updated successfully",
       data: updatedTenant,
+    };
+  }
+
+  static async updateProperty(req: RequestComponents): Promise<HandlerResult> {
+    const propertyId = req.params.propertyId;
+    const userId = req.meta.user?.id;
+    const data = req.body as UpdatePropertyDto;
+
+    if (!userId) {
+      appError("Unauthorized", ERROR_CODE.NOAUTHERR, { code: "SL07" });
+    }
+
+    //TODO: Ideally check if user has permission to update this property
+    const updatedProperty = await tenantRepository.updateProperty(propertyId, data);
+
+    if (!updatedProperty) {
+      appError("Property not found", ERROR_CODE.NOTFOUND, { code: "SL11" });
+    }
+
+    return {
+      status: 200,
+      message: "Property updated successfully",
+      data: updatedProperty,
     };
   }
 }

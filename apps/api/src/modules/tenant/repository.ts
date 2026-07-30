@@ -6,7 +6,7 @@ import {
   properties,
 } from "@parrot/db/src/schema";
 import { eq, and } from "drizzle-orm";
-import type { CreateTenantDto, UpdateTenantDto } from "@parrot/sdk";
+import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto } from "@parrot/sdk";
 
 export class TenantRepository {
   async createTenantWithOwner(userId: string, data: CreateTenantDto) {
@@ -91,6 +91,20 @@ export class TenantRepository {
         ),
       );
     return !!member;
+  }
+
+  // Update a property
+  async updateProperty(propertyId: string, data: UpdatePropertyDto) {
+    const [updatedProperty] = await db
+      .update(properties)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(properties.id, propertyId))
+      .returning();
+
+    return updatedProperty;
   }
 }
 
