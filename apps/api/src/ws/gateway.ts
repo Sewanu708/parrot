@@ -2,7 +2,7 @@ import { WebSocket, WebSocketServer } from "ws";
 import type { Server as HTTPServer } from "node:http";
 import { logger } from "../logger";
 import { db } from "@parrot/db/src/config";
-import { conversations } from "@parrot/db/src/schema";
+import { conversations, tenantMembers } from "@parrot/db/src/schema";
 import { eq } from "drizzle-orm";
 
 export interface WSEvent<T = any> {
@@ -14,7 +14,7 @@ export class WSGateway {
   private wss: WebSocketServer | null = null;
 
   // In-memory maps for v1
-  private tenantSockets = new Map<string, Set<WebSocket>>();
+  private agentSockets = new Map<string, Set<WebSocket>>();
   private visitorSockets = new Map<string, Set<WebSocket>>();
 
   /**
@@ -29,14 +29,15 @@ export class WSGateway {
       const clientType = url.searchParams.get("type"); // "agent" | "visitor"
       const tenantId = url.searchParams.get("tenantId");
       const visitorId = url.searchParams.get("visitorId");
+      const userId = url.searchParams.get("userId");
 
       logger.info(
-        { clientType, tenantId, visitorId },
+        { clientType, tenantId, visitorId, userId },
         "New WebSocket connection",
       );
 
-      if (clientType === "agent" && tenantId) {
-        this.registerAgent(tenantId, socket);
+      if (clientType === "agent" && userId) {
+        this.registerAgent(userId, socket);
       } else if (clientType === "visitor" && visitorId) {
         this.registerVisitor(visitorId, socket);
       } else {
@@ -47,26 +48,47 @@ export class WSGateway {
 
       socket.on("message", (rawData) => {
         try {
-          logger.info("Message received!!!")
+          logger.info("Message received!!!");
           const parsed = JSON.parse(rawData.toString());
           const { type, payload } = parsed;
 
           // Route ephemeral events
           if (type === "typing:start" || type === "typing:stop") {
             if (payload.targetVisitorId) {
-              this.sendToVisitor(payload.targetVisitorId, { event: type, data: payload });
+              this.sendToVisitor(payload.targetVisitorId, {
+                event: type,
+                data: payload,
+              });
             } else if (payload.targetTenantId) {
-              this.broadcastToTenant(payload.targetTenantId, { event: type, data: payload });
-            } else if (payload.conversationId && payload.senderType === "visitor") {
+              this.broadcastToTenant(payload.targetTenantId, {
+                event: type,
+                data: payload,
+              });
+            } else if (
+              payload.conversationId &&
+              payload.senderType === "visitor"
+            ) {
               // Fallback: look up tenantId from DB
               this.getTenantIdFromConversation(payload.conversationId)
                 .then((tenantId) => {
                   if (tenantId) {
-                    this.broadcastToTenant(tenantId, { event: type, data: payload });
+                    this.broadcastToTenant(tenantId, {
+                      event: type,
+                      data: payload,
+                    });
                   }
                 })
-                .catch((err) => logger.error({ err }, "Failed to lookup tenantId for WS event"));
+                .catch((err) =>
+                  logger.error(
+                    { err },
+                    "Failed to lookup tenantId for WS event",
+                  ),
+                );
             }
+          }
+
+          if (type === "ping") {
+            // send pong to user id
           }
         } catch (err) {
           logger.error({ err }, "Failed to process incoming WS message");
@@ -74,7 +96,7 @@ export class WSGateway {
       });
 
       socket.on("close", () => {
-        if (tenantId) this.unregisterAgent(tenantId, socket);
+        if (userId) this.unregisterAgent(userId, socket);
         if (visitorId) this.unregisterVisitor(visitorId, socket);
       });
 
@@ -86,19 +108,19 @@ export class WSGateway {
     logger.info("WebSocket Gateway initialized on /ws");
   }
 
-  registerAgent(tenantId: string, socket: WebSocket) {
-    if (!this.tenantSockets.has(tenantId)) {
-      this.tenantSockets.set(tenantId, new Set());
+  registerAgent(userId: string, socket: WebSocket) {
+    if (!this.agentSockets.has(userId)) {
+      this.agentSockets.set(userId, new Set());
     }
-    this.tenantSockets.get(tenantId)!.add(socket);
+    this.agentSockets.get(userId)!.add(socket);
   }
 
-  unregisterAgent(tenantId: string, socket: WebSocket) {
-    const sockets = this.tenantSockets.get(tenantId);
+  unregisterAgent(userId: string, socket: WebSocket) {
+    const sockets = this.agentSockets.get(userId);
     if (sockets) {
       sockets.delete(socket);
       if (sockets.size === 0) {
-        this.tenantSockets.delete(tenantId);
+        this.agentSockets.delete(userId);
       }
     }
   }
@@ -123,15 +145,27 @@ export class WSGateway {
   /**
    * Broadcast an event to all connected agents of a tenant
    */
-  broadcastToTenant(tenantId: string, payload: WSEvent) {
-    const sockets = this.tenantSockets.get(tenantId);
-    if (!sockets || sockets.size === 0) return;
+  async broadcastToTenant(tenantId: string, payload: WSEvent) {
+    try {
+      const memberRecords = await db
+        .select({ userId: tenantMembers.userId })
+        .from(tenantMembers)
+        .where(eq(tenantMembers.tenantId, tenantId));
 
-    const messageStr = JSON.stringify(payload);
-    for (const socket of sockets) {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(messageStr);
+      const messageStr = JSON.stringify(payload);
+
+      for (const member of memberRecords) {
+        const sockets = this.agentSockets.get(member.userId);
+        if (sockets && sockets.size > 0) {
+          for (const socket of sockets) {
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.send(messageStr);
+            }
+          }
+        }
       }
+    } catch (err) {
+      logger.error({ err, tenantId }, "Failed to broadcast to tenant");
     }
   }
 
@@ -153,12 +187,14 @@ export class WSGateway {
   /**
    * Helper function to fetch a tenantId given a conversationId
    */
-  async getTenantIdFromConversation(conversationId: string): Promise<string | null> {
+  async getTenantIdFromConversation(
+    conversationId: string,
+  ): Promise<string | null> {
     const [conversation] = await db
       .select({ tenantId: conversations.tenantId })
       .from(conversations)
       .where(eq(conversations.id, conversationId));
-    
+
     return conversation?.tenantId || null;
   }
 }

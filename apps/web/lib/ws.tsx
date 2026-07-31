@@ -22,7 +22,11 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       console.log("Authenticated, ensuring WebSocket and SDK are connected.");
       parrotClient.setToken(session.user.sessionToken);
       parrotClient.setTenantId(session.user.activeTenantId || undefined);
-      parrotClient.ws.connect({ type: "agent" });
+      parrotClient.ws.connect({ 
+        type: "agent", 
+        userId: session.user.id,
+        tenantId: session.user.activeTenantId
+      });
 
       parrotClient.ws.on("message:new", (data) => {
         console.log("WebSocket message received:", data);
@@ -78,6 +82,8 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       });
       timeOutRef.current = setInterval(() => {
         parrotClient.ws.emit("ping", {
+          type: "agent",
+          userId: session?.user?.id,
           tenantId: session?.user?.activeTenantId,
         });
       }, 5000);

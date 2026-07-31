@@ -2,10 +2,12 @@ import { PublicErrorCode } from "../constants/errors";
 
 export interface ParrotClientOptions {
   baseUrl?: string;
+  userId?: string;
   token?: string;
   tenantId?: string;
   getToken?: () => Promise<string | undefined> | string | undefined;
   getTenantId?: () => Promise<string | undefined> | string | undefined;
+  getUserId?: () => Promise<string | undefined> | string | undefined;
   headers?: Record<string, string>;
   fetchFn?: typeof fetch;
 }
@@ -50,7 +52,10 @@ export class HttpClient {
   private token?: string;
   private tenantId?: string;
   private getTokenFn?: () => Promise<string | undefined> | string | undefined;
-  private getTenantIdFn?: () => Promise<string | undefined> | string | undefined;
+  private getTenantIdFn?: () =>
+    | Promise<string | undefined>
+    | string
+    | undefined;
   private customHeaders: Record<string, string>;
   private fetchFn: typeof fetch;
 
@@ -109,13 +114,17 @@ export class HttpClient {
       ...options.headers,
     };
 
-    const resolvedToken = this.getTokenFn ? await this.getTokenFn() : this.token;
+    const resolvedToken = this.getTokenFn
+      ? await this.getTokenFn()
+      : this.token;
     if (resolvedToken) {
       headers["Authorization"] = `Bearer ${resolvedToken}`;
     }
 
-    const resolvedTenantId = this.getTenantIdFn ? await this.getTenantIdFn() : this.tenantId;
-    console.log(`This is tenant ${resolvedTenantId}`)
+    const resolvedTenantId = this.getTenantIdFn
+      ? await this.getTenantIdFn()
+      : this.tenantId;
+    console.log(`This is tenant ${resolvedTenantId}`);
     if (resolvedTenantId) {
       headers["x-tenant-id"] = resolvedTenantId;
     }

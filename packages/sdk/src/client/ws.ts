@@ -9,7 +9,7 @@ class WsClient {
   private isConnecting: boolean = false;
   private intentionallyClosed: boolean = false;
   private token?: string;
-  private tenantId?: string;
+  private userId?: string;
   private listeners: Map<string, Set<(data: any) => void>> = new Map();
 
   private reconnectAttempts = 0;
@@ -26,29 +26,39 @@ class WsClient {
 
     this.url = httpUrl.replace(/^http/, "ws").replace(/\/api$/, "");
     this.token = parrotClientOptions.token;
-    this.tenantId = parrotClientOptions.tenantId;
+    this.userId = parrotClientOptions.userId;
   }
 
-  setTenantId(tenantId: string | undefined) {
-    this.tenantId = tenantId;
+  setuserId(userId: string | undefined) {
+    this.userId = userId;
   }
   connect({
     type,
     visitorId,
+    userId,
+    tenantId,
   }: {
     type: "visitor" | "agent";
     visitorId?: string;
+    userId?: string;
+    tenantId?: string;
   }) {
     // Store connection params for reconnection attempts
-    this.lastConnectionParams = { type, visitorId };
+    this.lastConnectionParams = { type, visitorId, userId, tenantId };
 
     if (this.ws || this.isConnecting) return;
     this.isConnecting = true;
     try {
       const standardUrl = new URL(`${this.url}/ws`);
       if (this.token) standardUrl.searchParams.append("token", this.token);
-      if (this.tenantId)
-        standardUrl.searchParams.append("tenantId", this.tenantId);
+      
+      const actualUserId = userId || this.userId;
+      if (actualUserId)
+        standardUrl.searchParams.append("userId", actualUserId);
+        
+      if (tenantId)
+        standardUrl.searchParams.append("tenantId", tenantId);
+        
       if (visitorId) standardUrl.searchParams.append("visitorId", visitorId);
       standardUrl.searchParams.append("type", type);
 
@@ -79,8 +89,11 @@ class WsClient {
         try {
           const parsedData = JSON.parse(event?.data);
           const type = parsedData.type || parsedData.event;
-          const payload = parsedData.payload !== undefined ? parsedData.payload : parsedData.data;
-          
+          const payload =
+            parsedData.payload !== undefined
+              ? parsedData.payload
+              : parsedData.data;
+
           if (type) {
             this._trigger(type, payload);
           }
