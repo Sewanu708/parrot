@@ -2,8 +2,12 @@ import { PublicErrorCode } from "../constants/errors";
 
 export interface ParrotClientOptions {
   baseUrl?: string;
+  userId?: string;
   token?: string;
   tenantId?: string;
+  getToken?: () => Promise<string | undefined> | string | undefined;
+  getTenantId?: () => Promise<string | undefined> | string | undefined;
+  getUserId?: () => Promise<string | undefined> | string | undefined;
   headers?: Record<string, string>;
   fetchFn?: typeof fetch;
 }
@@ -21,12 +25,19 @@ export interface ApiResponse<T = any> {
 }
 
 export class ParrotApiError extends Error {
+  readonly __brand = "Parrot" as const;
   public readonly status: number;
   public readonly publicCode?: PublicErrorCode;
   public readonly errorCode?: string;
   public readonly details?: string;
 
-  constructor(status: number, message: string, publicCode?: PublicErrorCode, errorCode?: string, details?: string) {
+  constructor(
+    status: number,
+    message: string,
+    publicCode?: PublicErrorCode,
+    errorCode?: string,
+    details?: string,
+  ) {
     super(message);
     this.name = "ParrotApiError";
     this.status = status;
@@ -40,6 +51,11 @@ export class HttpClient {
   private baseUrl: string;
   private token?: string;
   private tenantId?: string;
+  private getTokenFn?: () => Promise<string | undefined> | string | undefined;
+  private getTenantIdFn?: () =>
+    | Promise<string | undefined>
+    | string
+    | undefined;
   private customHeaders: Record<string, string>;
   private fetchFn: typeof fetch;
 
@@ -54,10 +70,11 @@ export class HttpClient {
     this.baseUrl = rawUrl.replace(/\/$/, "");
     this.token = options.token;
     this.tenantId = options.tenantId;
+    this.getTokenFn = options.getToken;
+    this.getTenantIdFn = options.getTenantId;
     this.customHeaders = options.headers || {};
     this.fetchFn = options.fetchFn || globalThis.fetch.bind(globalThis);
   }
-
 
   setToken(token: string | undefined) {
     this.token = token;
@@ -74,7 +91,7 @@ export class HttpClient {
       body?: any;
       query?: Record<string, string | number | undefined>;
       headers?: Record<string, string>;
-    } = {}
+    } = {},
   ): Promise<ApiResponse<T>> {
     let url = `${this.baseUrl}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
@@ -97,12 +114,19 @@ export class HttpClient {
       ...options.headers,
     };
 
-    if (this.token) {
-      headers["Authorization"] = `Bearer ${this.token}`;
+    const resolvedToken = this.getTokenFn
+      ? await this.getTokenFn()
+      : this.token;
+    if (resolvedToken) {
+      headers["Authorization"] = `Bearer ${resolvedToken}`;
     }
 
-    if (this.tenantId) {
-      headers["x-tenant-id"] = this.tenantId;
+    const resolvedTenantId = this.getTenantIdFn
+      ? await this.getTenantIdFn()
+      : this.tenantId;
+    console.log(`This is tenant ${resolvedTenantId}`);
+    if (resolvedTenantId) {
+      headers["x-tenant-id"] = resolvedTenantId;
     }
 
     const response = await this.fetchFn(url, {
@@ -122,14 +146,18 @@ export class HttpClient {
         json.message || json.errors?.message || "An API error occurred",
         json.errors?.publicCode,
         json.errors?.code,
-        json.errors?.details
+        json.errors?.details,
       );
     }
 
     return json;
   }
 
-  get<T>(endpoint: string, query?: Record<string, any>, headers?: Record<string, string>) {
+  get<T>(
+    endpoint: string,
+    query?: Record<string, any>,
+    headers?: Record<string, string>,
+  ) {
     return this.request<T>(endpoint, { method: "GET", query, headers });
   }
 

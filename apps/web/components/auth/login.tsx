@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginFormData } from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
+import notify from "@/lib/toast";
 import AuthLeftPanel from "@/components/auth/auth-panel";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,53 +20,93 @@ export default function LoginPage() {
   const checkEmail = searchParams.get("message") === "check-email";
   const urlError = searchParams.get("error");
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [resendSent, setResendSent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    
+    resolver: zodResolver(loginSchema),
+  });
+
+  useEffect(() => {
+    if (verified) {
+      notify.success("Email verified — you can now sign in.");
+    }
+    if (urlError) {
+      notify.error(decodeURIComponent(urlError));
+    }
+  }, [verified, urlError]);
 
   const isVerificationError =
     error?.toLowerCase().includes("verify") ||
     urlError?.toLowerCase().includes("verify");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     setError(null);
 
     const result = await signIn("credentials", {
-      email,
-      password,
+      email: data.email,
+      password: data.password,
       redirect: false,
     });
 
     setLoading(false);
 
     if (!result?.ok) {
-      setError(result?.error ?? "Invalid email or password.");
+      const errorMsg = result?.error ?? "Invalid email or password.";
+      setError(errorMsg);
+      notify.error(result?.error, errorMsg);
       return;
     }
 
-    router.push(callbackUrl);
+    notify.success("Signed in successfully");
+
+    const session = await getSession();
+    const tenants = session?.user?.tenants ?? [];
+
+    if (tenants.length > 0) {
+      reset();
+      router.push(callbackUrl);
+    } else {
+      reset();
+      router.push("/create-workspace");
+    }
     router.refresh();
   };
 
   const handleResend = async () => {
+    const email = getValues("email");
+    if (!email) {
+      notify.error(null, "Please enter your email address to resend verification.");
+      return;
+    }
     setResending(true);
     try {
       await parrotClient.auth.resendVerification({ email });
       setResendSent(true);
-    } catch {
+      notify.success("Verification email sent", {
+        description: "Check your inbox for the link.",
+      });
+    } catch (err) {
       setError("Failed to resend. Please try again.");
+      notify.error(err, "Failed to resend verification email");
     } finally {
       setResending(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="min-h-screen bg-[#fcfcfc] dark:bg-[#191919] text-[#37352f] dark:text-[#ffffff] flex transition-colors duration-200">
       <AuthLeftPanel />
 
       {/* Right — Form */}
@@ -69,7 +114,7 @@ export default function LoginPage() {
         {/* Mobile logo */}
         <Link
           href="/"
-          className="lg:hidden flex items-center gap-2 font-bold text-xl tracking-tighter text-white mb-12"
+          className="lg:hidden flex items-center gap-2 font-bold text-xl tracking-tighter text-[#37352f] dark:text-[#ffffff] mb-12"
         >
           parrot.
           <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -82,7 +127,7 @@ export default function LoginPage() {
           </p>
 
           {/* Heading */}
-          <h1 className="text-2xl font-bold tracking-tighter text-white mb-8">
+          <h1 className="text-2xl font-bold tracking-tighter text-[#37352f] dark:text-[#ffffff] mb-8">
             Welcome back.
           </h1>
 
@@ -109,7 +154,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email */}
             <div className="space-y-2">
               <label
@@ -121,37 +166,48 @@ export default function LoginPage() {
               <input
                 id="login-email"
                 type="email"
-                required
                 autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane@company.com"
-                className="w-full bg-[#0a0a0a] border border-[#1A1A1A] rounded-md px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white transition-colors duration-200"
+                {...register("email")}
+                placeholder="jane@parrot.dev"
+                className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
               />
+              {errors.email && (
+                <p className="font-mono text-[11px] text-red-400">{errors.email.message}</p>
+              )}
             </div>
 
             {/* Password */}
             <div className="space-y-2">
               <label
                 htmlFor="login-password"
-                className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500"
+                className="block font-mono text-[10px] uppercase tracking-widest text-[#37352f]/60 dark:text-[#9b9b9b]"
               >
                 Password
               </label>
-              <input
-                id="login-password"
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-[#0a0a0a] border border-[#1A1A1A] rounded-md px-4 py-3 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white transition-colors duration-200"
-              />
+              <div className="relative">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  {...register("password")}
+                  placeholder="••••••••"
+                  className="w-full bg-white dark:bg-[#252525] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-4 py-3 text-sm text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777] focus:outline-none focus:border-zinc-400 transition-colors duration-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              {errors.password && (
+                <p className="font-mono text-[11px] text-red-400">{errors.password.message}</p>
+              )}
               <div className="flex justify-end">
                 <Link
                   href="/auth/forgot-password"
-                  className="font-mono text-[10px] text-neutral-500 hover:text-white transition-colors"
+                  className="font-mono text-[10px] text-neutral-500 hover:text-[#37352f] dark:hover:text-[#ffffff] transition-colors"
                 >
                   Forgot password?
                 </Link>
@@ -167,7 +223,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleResend}
                     disabled={resending || resendSent}
-                    className="font-mono text-[10px] text-neutral-400 hover:text-white transition-colors disabled:opacity-40"
+                    className="font-mono text-[10px] text-neutral-400 hover:text-[#37352f] dark:hover:text-[#ffffff] transition-colors disabled:opacity-40"
                   >
                     {resendSent
                       ? "✓ Verification email sent"
@@ -184,7 +240,7 @@ export default function LoginPage() {
               id="login-submit"
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-black py-3.5 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full bg-[#37352f] dark:bg-white text-white dark:text-black py-3.5 rounded-md text-sm font-medium hover:opacity-90 transition-opacity duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign in →"}
             </button>
@@ -195,7 +251,7 @@ export default function LoginPage() {
             No account?{" "}
             <Link
               href="/auth/signup"
-              className="text-white hover:text-neutral-300 font-medium transition-colors"
+              className="text-[#37352f] dark:text-[#ffffff] hover:opacity-70 font-medium transition-opacity"
             >
               Create one →
             </Link>

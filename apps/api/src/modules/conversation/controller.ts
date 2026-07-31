@@ -127,4 +127,30 @@ export class ConversationController {
       });
     }
   }
+
+  /**
+   * GET /api/v1/conversations
+   * Fetch all conversations for the tenant
+   */
+  static async getConversations(req: RequestComponents): Promise<HandlerResult> {
+    const tenantId = req.meta?.tenant?.id;
+    if (!tenantId) {
+      appError("Tenant ID is required", ERROR_CODE.INVLDDATA, { code: "SL01" });
+    }
+
+    try {
+      const conversationsList =
+        await conversationRepository.getTenantConversations(tenantId);
+
+      return {
+        status: 200,
+        data: conversationsList,
+      };
+    } catch (error) {
+      appError("Failed to fetch conversations", ERROR_CODE.APPERR, {
+        code: "SL00",
+        cause: error,
+      });
+    }
+  }
 }

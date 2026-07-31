@@ -6,6 +6,7 @@ import { sessions, users } from "@parrot/db/src/schema";
 import { eq } from "drizzle-orm";
 import expressHandler from "../../express/handler";
 import { getRequestContext } from "../utils/global";
+import { logger } from "../../logger";
 
 export const requireAuth = expressHandler({
   path: "*",

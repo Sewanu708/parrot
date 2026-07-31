@@ -32,8 +32,16 @@ export const getConversationMessagesRoute = expressHandler({
   handler: ConversationController.getMessages.bind(ConversationController),
 });
 
+export const getConversationsRoute = expressHandler({
+  method: "get",
+  path: "/conversations",
+  middlewares: [requireAuth, requireTenant],
+  handler: ConversationController.getConversations.bind(ConversationController),
+});
+
 export const conversationRoutes = [
   sendVisitorMessageRoute,
   sendAgentMessageRoute,
   getConversationMessagesRoute,
+  getConversationsRoute,
 ];

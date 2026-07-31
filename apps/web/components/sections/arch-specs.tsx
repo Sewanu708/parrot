@@ -22,7 +22,7 @@ export default function ArchSpecs() {
   const rightCol = specs.slice(2, 4);
 
   return (
-    <section className="border-t border-[#1A1A1A] w-full max-w-6xl mx-auto mt-24">
+    <section className="border-t border-[#e9e9e7] dark:border-[#333333] w-full max-w-6xl mx-auto mt-24 transition-colors duration-200">
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* Left Column */}
         <div>
@@ -32,7 +32,7 @@ export default function ArchSpecs() {
         </div>
 
         {/* Right Column */}
-        <div className="md:border-l md:border-[#1A1A1A]">
+        <div className="md:border-l md:border-[#e9e9e7] dark:md:border-[#333333] transition-colors duration-200">
           {rightCol.map((spec) => (
             <SpecRow key={spec.label} {...spec} />
           ))}
@@ -44,11 +44,11 @@ export default function ArchSpecs() {
 
 function SpecRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="group border-b border-[#1A1A1A] py-6 px-8 flex flex-col sm:flex-row gap-4 sm:gap-12 hover:bg-[#0a0a0a] transition-colors duration-200 cursor-default">
-      <span className="font-mono text-xs text-neutral-500 uppercase tracking-widest w-28 shrink-0 pt-0.5 group-hover:text-white transition-colors duration-200">
+    <div className="group border-b border-[#e9e9e7] dark:border-[#333333] py-6 px-8 flex flex-col sm:flex-row gap-4 sm:gap-12 hover:bg-[#f7f7f5] dark:hover:bg-[#252525] transition-colors duration-200 cursor-default">
+      <span className="font-mono text-xs text-[#37352f]/60 dark:text-[#9b9b9b] uppercase tracking-widest w-28 shrink-0 pt-0.5 group-hover:text-[#37352f] dark:group-hover:text-[#ffffff] transition-colors duration-200">
         {label}
       </span>
-      <span className="text-sm text-gray-200 font-medium">{value}</span>
+      <span className="text-sm text-[#37352f] dark:text-[#ffffff] font-medium">{value}</span>
     </div>
   );
 }

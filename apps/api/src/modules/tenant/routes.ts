@@ -1,6 +1,6 @@
 import expressHandler from "../../express/handler";
 import { TenantController } from "./controller";
-import { CreateTenantSchema, UpdateTenantSchema } from "@parrot/sdk";
+import { CreateTenantSchema, UpdateTenantSchema, UpdatePropertySchema } from "@parrot/sdk";
 import { validateRequest } from "../../shared/middleware/validate";
 import { authenticatedLimiter } from "../../shared/middleware/limiter";
 import { requireAuth } from "../../shared/middleware/auth"; // Assuming there is an auth middleware
@@ -26,8 +26,24 @@ export const updateTenantRoute = expressHandler({
   handler: TenantController.update.bind(TenantController),
 });
 
+export const updatePropertyRoute = expressHandler({
+  method: "patch",
+  path: "/properties/:propertyId",
+  middlewares: [requireAuth, authenticatedLimiter, validateRequest({ body: UpdatePropertySchema })],
+  handler: TenantController.updateProperty.bind(TenantController),
+});
+
+export const getPropertiesRoute = expressHandler({
+  method: "get",
+  path: "/tenants/:tenantId/properties",
+  middlewares: [requireAuth, authenticatedLimiter],
+  handler: TenantController.getProperties.bind(TenantController),
+});
+
 export const tenantRoutes = [
   createTenantRoute,
   getTenantRoute,
   updateTenantRoute,
+  updatePropertyRoute,
+  getPropertiesRoute,
 ];

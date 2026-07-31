@@ -1,5 +1,5 @@
 import type { HttpClient } from "../http";
-import type { CreateTenantDto, UpdateTenantDto, TenantDto } from "../../schema/tenant";
+import type { CreateTenantDto, UpdateTenantDto, TenantDto, UpdatePropertyDto, PropertyDto } from "../../schema/tenant";
 
 export class TenantModule {
   constructor(private http: HttpClient) {}
@@ -14,6 +14,14 @@ export class TenantModule {
 
   async update(tenantId: string, input: UpdateTenantDto) {
     return this.http.patch<TenantDto>(`/tenants/${tenantId}`, input);
+  }
+
+  async updateProperty(propertyId: string, input: UpdatePropertyDto) {
+    return this.http.patch<PropertyDto>(`/properties/${propertyId}`, input);
+  }
+
+  async getProperties(tenantId: string) {
+    return this.http.get<PropertyDto[]>(`/tenants/${tenantId}/properties`);
   }
 }
 

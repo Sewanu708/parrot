@@ -20,28 +20,28 @@ export default function HowItWorks() {
   return (
     <section className="w-full max-w-6xl mx-auto px-8 mt-24">
       {/* Section label */}
-      <div className="font-mono text-[10px] text-neutral-500 uppercase tracking-widest mb-12">
+      <div className="font-mono text-[10px] text-[#37352f]/60 dark:text-[#9b9b9b] uppercase tracking-widest mb-12">
         How it works
       </div>
 
       {/* Steps grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 border-t border-[#1A1A1A]">
+      <div className="grid grid-cols-1 md:grid-cols-3 border-t border-[#e9e9e7] dark:border-[#333333] transition-colors duration-200">
         {steps.map((step, i) => (
           <div
             key={step.num}
-            className={`group py-10 ${
+            className={`group py-10 transition-colors duration-200 ${
               i < steps.length - 1
-                ? "border-b border-[#1A1A1A] md:border-b-0"
+                ? "border-b border-[#e9e9e7] dark:border-[#333333] md:border-b-0"
                 : ""
-            } ${i > 0 ? "md:border-l md:border-[#1A1A1A] md:pl-8" : ""}`}
+            } ${i > 0 ? "md:border-l md:border-[#e9e9e7] dark:md:border-[#333333] md:pl-8" : ""}`}
           >
-            <span className="font-mono text-[10px] text-neutral-600 uppercase tracking-widest group-hover:text-neutral-400 transition-colors duration-200">
+            <span className="font-mono text-[10px] text-[#37352f]/40 dark:text-[#777777] uppercase tracking-widest group-hover:text-[#37352f] dark:group-hover:text-[#ffffff] transition-colors duration-200">
               {step.num}
             </span>
-            <h3 className="text-white font-semibold text-base mt-6 mb-3 group-hover:text-gray-100 transition-colors duration-200">
+            <h3 className="text-[#37352f] dark:text-[#ffffff] font-semibold text-base mt-6 mb-3 transition-colors duration-200">
               {step.title}
             </h3>
-            <p className="text-sm text-neutral-500 leading-relaxed">{step.desc}</p>
+            <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b] leading-relaxed">{step.desc}</p>
           </div>
         ))}
       </div>

@@ -3,6 +3,7 @@ import type {
   SendAgentMessageInput,
   SendMessageResponse,
   MessageDto,
+  ConversationWithVisitorDto,
 } from "../../schema/conversation";
 
 export class ConversationModule {
@@ -14,6 +15,10 @@ export class ConversationModule {
 
   async getMessages(conversationId: string) {
     return this.http.get<MessageDto[]>(`/conversations/${conversationId}/messages`);
+  }
+
+  async getConversations() {
+    return this.http.get<ConversationWithVisitorDto[]>(`/conversations`);
   }
 }
 

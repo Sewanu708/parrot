@@ -5,29 +5,42 @@ import { DefaultJWT } from "next-auth/jwt";
 
 declare module "next-auth" {
   interface Session {
-    apiToken: string;
-    activeTenantId: string | null;
-    tenants: Array<{ id: string; name: string }>;
-    user: DefaultSession["user"];
+    user: {
+      id: string;
+      activeTenantId: string | null;
+      email: string;
+      name: string;
+      tenants: Array<{ id: string; name: string; logoUrl?: string }>;
+      sessionToken?: string;
+      defaultPropertyId?: string;
+    } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
-    token: string;
-    tenants: Array<{ id: string; name: string }>;
+    id: string;
+    sessionToken: string;
+    name: string;
+    email: string;
+    tenants: Array<{ id: string; name: string; logoUrl?: string }>;
     activeTenantId: string | null;
+    defaultPropertyId?: string;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
-    apiToken: string;
-    tenants: Array<{ id: string; name: string }>;
+    id: string;
+    sessionToken: string;
+    name: string;
+    email: string;
+    tenants: Array<{ id: string; name: string; logoUrl?: string }>;
     activeTenantId: string | null;
+    defaultPropertyId?: string;
   }
 }
 
 export const authOptions: AuthOptions = {
-  secret: "process.env.AUTH_SECRET",
+  secret: process.env.NEXTAUTH_SECRET || process.env.AUTH_SECRET,
   providers: [
     Credentials({
       id: "credentials",
@@ -49,12 +62,16 @@ export const authOptions: AuthOptions = {
 
           const { token, user, tenants, lastActiveTenantId } = res.data;
           const activeTenantId = lastActiveTenantId ?? tenants[0]?.id ?? null;
-
+          parrotClient.setToken(token);
+          parrotClient.setTenantId(activeTenantId);
+          parrotClient.ws.connect({
+            type: "agent",
+          });
           return {
             id: user.id,
             name: user.name,
             email: user.email,
-            token,
+            sessionToken: token,
             tenants,
             activeTenantId,
           };
@@ -67,20 +84,40 @@ export const authOptions: AuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // Runs on initial sign-in; persist API data into the JWT
       if (user) {
-        token.apiToken = (user as any).token;
-        token.tenants = (user as any).tenants;
-        token.activeTenantId = (user as any).activeTenantId;
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.tenants = user.tenants;
+        token.activeTenantId = user.activeTenantId;
+        token.sessionToken = user.sessionToken;
+      }
+
+      // Handle update() from client
+      if (trigger === "update" && session?.user) {
+        if (session.user.tenants) {
+          token.tenants = session.user.tenants;
+        }
+        if (session.user.activeTenantId !== undefined) {
+          token.activeTenantId = session.user.activeTenantId;
+        }
       }
       return token;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       // Expose only what the client needs
-      session.apiToken = token.apiToken as string;
-      session.tenants = token.tenants as any[];
-      session.activeTenantId = token.activeTenantId as string | null;
+      session.user = {
+        id: token.id,
+        name: token.name,
+        email: token.email,
+        activeTenantId: token.activeTenantId,
+        tenants: token.tenants,
+        sessionToken: token.sessionToken,
+      };
+      // session.tenants = token.tenants as any[];
+      // session.activeTenantId = token.activeTenantId as string | null;
       return session;
     },
   },

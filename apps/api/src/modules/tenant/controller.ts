@@ -2,7 +2,7 @@ import { RequestComponents, HandlerResult } from "../../express/types";
 import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
 import { tenantRepository } from "./repository";
-import type { CreateTenantDto, UpdateTenantDto } from "@parrot/sdk";
+import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto } from "@parrot/sdk";
 import { AuthRepository } from "../auth/repository";
 import { Session, User } from "@parrot/db/src/schema";
 
@@ -17,13 +17,16 @@ export class TenantController {
     const data = req.body as CreateTenantDto;
 
     try {
-      const tenant = await tenantRepository.createTenantWithOwner(userId, data);
+      const { tenant, defaultProperty } = await tenantRepository.createTenantWithOwner(userId, data);
 
       void AuthRepository.updateActiveSession(session.id, tenant.id);
       return {
         status: 201,
         message: "Tenant created successfully",
-        data: tenant,
+        data: {
+          ...tenant,
+          defaultPropertyId: defaultProperty.id,
+        },
       };
     } catch (error) {
       appError("Failed to create tenant", ERROR_CODE.APPERR, {
@@ -88,6 +91,53 @@ export class TenantController {
       status: 200,
       message: "Tenant updated successfully",
       data: updatedTenant,
+    };
+  }
+
+  static async updateProperty(req: RequestComponents): Promise<HandlerResult> {
+    const propertyId = req.params.propertyId;
+    const userId = req.meta.user?.id;
+    const data = req.body as UpdatePropertyDto;
+
+    if (!userId) {
+      appError("Unauthorized", ERROR_CODE.NOAUTHERR, { code: "SL07" });
+    }
+
+    //TODO: Ideally check if user has permission to update this property
+    const updatedProperty = await tenantRepository.updateProperty(propertyId, data);
+
+    if (!updatedProperty) {
+      appError("Property not found", ERROR_CODE.NOTFOUND, { code: "SL11" });
+    }
+
+    return {
+      status: 200,
+      message: "Property updated successfully",
+      data: updatedProperty,
+    };
+  }
+
+  static async getProperties(req: RequestComponents): Promise<HandlerResult> {
+    const tenantId = req.params.tenantId;
+    const userId = req.meta.user?.id;
+
+    if (!userId) {
+      appError("Unauthorized", ERROR_CODE.NOAUTHERR, { code: "SL07" });
+    }
+
+    const isMember = await tenantRepository.isUserMemberOfTenant(
+      userId,
+      tenantId,
+    );
+    if (!isMember) {
+      appError("Forbidden", ERROR_CODE.PERMERR, { code: "SL09" });
+    }
+
+    const properties = await tenantRepository.getPropertiesByTenantId(tenantId);
+
+    return {
+      status: 200,
+      data: properties,
     };
   }
 }

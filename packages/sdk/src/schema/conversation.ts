@@ -49,3 +49,19 @@ export interface SendMessageResponse {
   message: MessageDto;
 }
 
+export interface VisitorDto {
+  id: string;
+  propertyId: string;
+  name: string | null;
+  clientVisitorId: string | null;
+  email: string | null;
+  phone: string | null;
+  metadata: Record<string, any>;
+  firstSeenAt: string;
+  lastSeenAt: string;
+}
+
+export interface ConversationWithVisitorDto {
+  conversation: ConversationDto;
+  visitor: VisitorDto;
+}

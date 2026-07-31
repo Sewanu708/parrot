@@ -5,7 +5,7 @@ import {
   conversations,
   messages,
 } from "@parrot/db/src/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import type {
   SendVisitorMessageInput,
   SendAgentMessageInput,
@@ -22,7 +22,7 @@ export class ConversationRepository {
       const [property] = await tx
         .select()
         .from(properties)
-        .where(eq(properties.widgetKey, data.propertyId));
+        .where(eq(properties.id, data.propertyId));
 
       if (!property) {
         appError("Property not found", ERROR_CODE.NOTFOUND, {
@@ -155,6 +155,21 @@ export class ConversationRepository {
       .from(messages)
       .where(eq(messages.conversationId, conversationId))
       .orderBy(messages.createdAt);
+  }
+
+  /**
+   * Get all conversations for a tenant (inbox)
+   */
+  async getTenantConversations(tenantId: string) {
+    return await db
+      .select({
+        conversation: conversations,
+        visitor: visitors,
+      })
+      .from(conversations)
+      .innerJoin(visitors, eq(conversations.visitorId, visitors.id))
+      .where(eq(conversations.tenantId, tenantId))
+      .orderBy(desc(conversations.updatedAt));
   }
 }
 

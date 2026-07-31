@@ -1,7 +1,12 @@
 import { db } from "@parrot/db/src/config";
-import { tenants, tenantMembers, roles } from "@parrot/db/src/schema";
+import {
+  tenants,
+  tenantMembers,
+  roles,
+  properties,
+} from "@parrot/db/src/schema";
 import { eq, and } from "drizzle-orm";
-import type { CreateTenantDto, UpdateTenantDto } from "@parrot/sdk";
+import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto } from "@parrot/sdk";
 
 export class TenantRepository {
   async createTenantWithOwner(userId: string, data: CreateTenantDto) {
@@ -11,9 +16,6 @@ export class TenantRepository {
         .insert(tenants)
         .values({
           name: data.name,
-          domain: data.domain,
-          supportEmail: data.supportEmail,
-          brandColor: data.brandColor,
           logoUrl: data.logoUrl,
         })
         .returning();
@@ -21,6 +23,20 @@ export class TenantRepository {
       if (!newTenant) {
         throw new Error("Failed to create tenant");
       }
+
+      // 1b. Auto-provision the Default Property
+      const [newProperty] =await tx
+        .insert(properties)
+        .values({
+          tenantId: newTenant.id,
+          name: data.propertyName,
+          domain: data.domain,
+          supportEmail: data.supportEmail,
+          brandColor: data.brandColor,
+          logoUrl: data.logoUrl,
+          settings: {},
+        })
+        .returning();
 
       // 2. Create default roles (Owner, Admin, Agent)
       const [ownerRole] = await tx
@@ -39,7 +55,7 @@ export class TenantRepository {
         roleId: ownerRole.id,
       });
 
-      return newTenant;
+      return { tenant: newTenant, defaultProperty: newProperty };
     });
   }
 
@@ -70,9 +86,35 @@ export class TenantRepository {
       .select()
       .from(tenantMembers)
       .where(
-        and(eq(tenantMembers.userId, userId), eq(tenantMembers.tenantId, tenantId))
+        and(
+          eq(tenantMembers.userId, userId),
+          eq(tenantMembers.tenantId, tenantId),
+        ),
       );
     return !!member;
+  }
+
+  // Update a property
+  async updateProperty(propertyId: string, data: UpdatePropertyDto) {
+    const [updatedProperty] = await db
+      .update(properties)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(properties.id, propertyId))
+      .returning();
+
+    return updatedProperty;
+  }
+
+  // Get properties for a tenant
+  async getPropertiesByTenantId(tenantId: string) {
+    return db
+      .select()
+      .from(properties)
+      .where(eq(properties.tenantId, tenantId))
+      .orderBy(properties.createdAt);
   }
 }
 
