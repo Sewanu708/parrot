@@ -48,3 +48,11 @@ export interface PropertyDto {
   updatedAt: string;
 }
 
+export interface WidgetPropertyConfigDto {
+  name: string;
+  brandColor: string | null;
+  logoUrl: string | null;
+  settings: Record<string, any>;
+  isOnline: boolean;
+}
+

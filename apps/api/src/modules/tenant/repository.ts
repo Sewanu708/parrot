@@ -7,6 +7,7 @@ import {
   permissions,
   rolePermissions,
   businessHours,
+  businessHourExceptions,
 } from "@parrot/db/src/schema";
 import { eq, and } from "drizzle-orm";
 import type {
@@ -156,16 +157,33 @@ export class TenantRepository {
 
   // Update a property
   async updateProperty(propertyId: string, data: UpdatePropertyDto) {
-    const [updatedProperty] = await db
+    const [updated] = await db
       .update(properties)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(data)
       .where(eq(properties.id, propertyId))
       .returning();
+    return updated;
+  }
 
-    return updatedProperty;
+  async getWidgetPropertyConfig(propertyId: string) {
+    const [property] = await db
+      .select()
+      .from(properties)
+      .where(eq(properties.id, propertyId));
+
+    if (!property) return null;
+
+    const hours = await db
+      .select()
+      .from(businessHours)
+      .where(eq(businessHours.propertyId, propertyId));
+
+    const exceptions = await db
+      .select()
+      .from(businessHourExceptions)
+      .where(eq(businessHourExceptions.propertyId, propertyId));
+
+    return { property, hours, exceptions };
   }
 
   // Get properties for a tenant

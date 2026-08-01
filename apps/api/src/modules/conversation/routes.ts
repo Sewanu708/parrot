@@ -6,11 +6,12 @@ import { requireAuth } from "../../shared/middleware/auth";
 import { requireTenant } from "../../shared/middleware/tenant";
 import requestPermission from "../../shared/middleware/permissions";
 import { PERMISSIONS } from "../../express/constant";
+import { authenticatedLimiter, unauthenticatedLimiter } from "../../shared/middleware/limiter";
 
 export const sendVisitorMessageRoute = expressHandler({
   method: "post",
   path: "/widget/messages",
-  middlewares: [validateRequest({ body: VisitorConversationSchema })],
+  middlewares: [unauthenticatedLimiter, validateRequest({ body: VisitorConversationSchema })],
   handler: ConversationController.sendVisitorMessage.bind(
     ConversationController,
   ),
@@ -21,6 +22,7 @@ export const sendAgentMessageRoute = expressHandler({
   path: "/conversations/messages",
   middlewares: [
     requireAuth,
+    authenticatedLimiter,
     requireTenant,
     requestPermission(PERMISSIONS.CONVERSATIONS_WRITE),
     validateRequest({ body: SendAgentMessageSchema }),
@@ -31,14 +33,14 @@ export const sendAgentMessageRoute = expressHandler({
 export const getConversationMessagesRoute = expressHandler({
   method: "get",
   path: "/conversations/:conversationId/messages",
-  middlewares: [requireAuth, requireTenant, requestPermission(PERMISSIONS.CONVERSATIONS_READ)],
+  middlewares: [requireAuth, authenticatedLimiter, requireTenant, requestPermission(PERMISSIONS.CONVERSATIONS_READ)],
   handler: ConversationController.getMessages.bind(ConversationController),
 });
 
 export const getConversationsRoute = expressHandler({
   method: "get",
   path: "/conversations",
-  middlewares: [requireAuth, requireTenant, requestPermission(PERMISSIONS.CONVERSATIONS_READ)],
+  middlewares: [requireAuth, authenticatedLimiter, requireTenant, requestPermission(PERMISSIONS.CONVERSATIONS_READ)],
   handler: ConversationController.getConversations.bind(ConversationController),
 });
 
