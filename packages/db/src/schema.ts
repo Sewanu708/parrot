@@ -5,6 +5,8 @@ import {
   text,
   boolean,
   timestamp,
+  date,
+  integer,
   jsonb,
   uniqueIndex,
   index,
@@ -59,6 +61,11 @@ export const propertyStatusEnum = pgEnum("property_status", [
   "active",
   "inactive",
 ]);
+
+export const cannedResponseVisibilityEnum = pgEnum(
+  "canned_response_visibility",
+  ["shared", "personal"],
+);
 
 export const tenants = pgTable("tenants", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -410,6 +417,168 @@ export const invites = pgTable(
   ],
 );
 
+export const knowledgeBaseCategory: ReturnType<typeof pgTable> = pgTable(
+  "kb_category",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => properties.id, { onDelete: "cascade" }),
+      parentId: uuid("parent_id").references(() => (knowledgeBaseCategory as any).id, {
+        onDelete: "set null",
+      }),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_kb_category_tenant_id").on(table.tenantId),
+    index("idx_kb_category_property_id").on(table.propertyId),
+    index("idx_kb_category_parent_id").on(table.parentId),
+    uniqueIndex("uq_kb_category_tenant_property_slug").on(
+      table.tenantId,
+      table.propertyId,
+      table.slug,
+    ),
+  ],
+);
+
+export const kbArticleStatusEnum = pgEnum("kb_article_status", [
+  "draft",
+  "published",
+  "archived",
+]);
+
+export const knowledgeBaseArticles = pgTable(
+  "kb_articles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => properties.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id").references(() => knowledgeBaseCategory.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    status: kbArticleStatusEnum("status").notNull().default("draft"),
+    content: text("content"),
+    authorId: uuid("author_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_kb_articles_tenant_property_id").on(
+      table.tenantId,
+      table.propertyId,
+    ),
+  ],
+);
+export const businessHours = pgTable(
+  "business_hours",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => properties.id, { onDelete: "cascade" }),
+    dayOfWeek: integer("day_of_week").notNull(),
+    startTime: text("start_time").notNull(), 
+    endTime: text("end_time").notNull(),
+  },
+  (table) => [
+    uniqueIndex("uq_business_hours_property_day").on(
+      table.propertyId,
+      table.dayOfWeek,
+    ),
+    index("idx_business_hours_property_id").on(table.propertyId),
+  ],
+);
+
+export const businessHourExceptions = pgTable(
+  "business_hour_exceptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    propertyId: uuid("property_id")
+      .notNull()
+      .references(() => properties.id, { onDelete: "cascade" }),
+    date: date("date").notNull(),
+    isClosed: boolean("is_closed").notNull().default(false),
+    reason: text("reason"),
+  },
+  (table) => [
+    uniqueIndex("uq_business_hour_exceptions_property_date").on(
+      table.propertyId,
+      table.date,
+    ),
+    index("idx_business_hour_exceptions_property_id").on(table.propertyId),
+  ],
+);
+
+export const cannedResponses = pgTable(
+  "canned_responses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    ownerId: uuid("owner_id").references(() => tenantMembers.id, {
+      onDelete: "set null",
+    }),
+    visibility: cannedResponseVisibilityEnum("visibility").notNull(),
+    shortcut: text("shortcut").notNull(),
+    content: text("content"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_canned_responses_tenant_id").on(table.tenantId),
+    index("idx_canned_responses_owner_id").on(table.ownerId),
+    check(
+      "chk_canned_responses_owner_visibility",
+      sql`(
+        (${table.ownerId} IS NULL AND ${table.visibility} = 'shared') OR
+        (${table.ownerId} IS NOT NULL AND ${table.visibility} = 'personal')
+      )`,
+    ),
+  ],
+);
+
+export const createCannedResponsesUniqueIndexShared = sql`
+  CREATE UNIQUE INDEX IF NOT EXISTS uq_canned_responses_tenant_shortcut_shared
+  ON canned_responses (tenant_id, shortcut)
+  WHERE visibility = 'shared'
+`;
+
+export const createCannedResponsesUniqueIndexPersonal = sql`
+  CREATE UNIQUE INDEX IF NOT EXISTS uq_canned_responses_tenant_owner_shortcut_personal
+  ON canned_responses (tenant_id, owner_id, shortcut)
+  WHERE visibility = 'personal'
+`;
+// TODO: add timezone to properties table
+
+
+
 // ──────────────────────────────────────────────
 //  Inferred Types
 // ──────────────────────────────────────────────
@@ -428,3 +597,9 @@ export type Conversation = InferSelectModel<typeof conversations>;
 export type Message = InferSelectModel<typeof messages>;
 export type Ticket = InferSelectModel<typeof tickets>;
 export type Invite = InferSelectModel<typeof invites>;
+export type KnowledgeBaseCategory = InferSelectModel<
+  typeof knowledgeBaseCategory
+>;
+export type KnowledgeBaseArticle = InferSelectModel<
+  typeof knowledgeBaseArticles
+>;
