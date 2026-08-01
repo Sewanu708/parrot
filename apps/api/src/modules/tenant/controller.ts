@@ -1,8 +1,9 @@
 import { RequestComponents, HandlerResult } from "../../express/types";
 import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
+import { isPropertyOnline } from "../../shared/utils/availability";
 import { tenantRepository } from "./repository";
-import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto } from "@parrot/sdk";
+import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto, WidgetPropertyConfigDto } from "@parrot/sdk";
 import { AuthRepository } from "../auth/repository";
 import { Session, User } from "@parrot/db/src/schema";
 
@@ -139,5 +140,30 @@ export class TenantController {
       status: 200,
       data: properties,
     };
+  }
+
+  static async getWidgetConfig(req: RequestComponents): Promise<HandlerResult> {
+    const propertyId = req.params.propertyId;
+    if (!propertyId) {
+      appError("Property ID is required", ERROR_CODE.INVLDDATA, { code: "SL01" });
+    }
+
+    const data = await tenantRepository.getWidgetPropertyConfig(propertyId);
+    if (!data) {
+      appError("Property not found", ERROR_CODE.NOTFOUND, { code: "SL04" });
+    }
+
+    const { property, hours, exceptions } = data;
+    const isOnline = isPropertyOnline(property.timezone, hours, exceptions);
+
+    const config: WidgetPropertyConfigDto = {
+      name: property.name,
+      brandColor: property.brandColor,
+      logoUrl: property.logoUrl,
+      settings: property.settings as Record<string,any>,
+      isOnline,
+    };
+
+    return { status: 200, data: config };
   }
 }

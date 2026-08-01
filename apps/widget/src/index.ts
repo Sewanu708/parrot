@@ -49,8 +49,7 @@ class Parrot {
   private initScriptConfig() {
     const script =
       (document.currentScript as HTMLScriptElement) ||
-      document.querySelector("script[data-property-id]") ||
-      document.querySelector("script[data-widget-key]");
+      document.querySelector("script[data-property-id]")
 
     if (script) {
       this.propertyId = script.getAttribute("data-property-id");

@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { createContext, useContext, useEffect, useRef } from "react";
 import { parrotClient } from "./parrot";
 import queryClient from "./query-client";
+import { notificationSound } from "./audio";
 
 interface WsContextType {
   ws: ParrotClient["ws"] | null;
@@ -22,15 +23,13 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
       console.log("Authenticated, ensuring WebSocket and SDK are connected.");
       parrotClient.setToken(session.user.sessionToken);
       parrotClient.setTenantId(session.user.activeTenantId || undefined);
-      parrotClient.ws.connect({ 
-        type: "agent", 
+      parrotClient.ws.connect({
+        type: "agent",
         userId: session.user.id,
-        tenantId: session.user.activeTenantId
+        tenantId: session.user.activeTenantId,
       });
 
       parrotClient.ws.on("message:new", (data) => {
-        console.log("WebSocket message received:", data);
-
         // 1. Inject the new message directly into the active chat's cache
         queryClient.setQueryData(
           ["messages", data?.conversationId],
@@ -49,6 +48,9 @@ export function WebSocketProvider({ children }: { children: React.ReactNode }) {
             };
           },
         );
+
+        notificationSound.play();
+        notificationSound.speak("New message");
 
         // 2. Bump the conversation to the top of the sidebar cache
         queryClient.setQueryData(

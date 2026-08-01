@@ -29,6 +29,7 @@ export const UpdatePropertySchema = z.object({
   supportEmail: z.string().email().optional(),
   brandColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid hex color format").optional(),
   logoUrl: z.string().url().optional(),
+  timezone: z.string().optional(),
 });
 
 export type UpdatePropertyDto = z.infer<typeof UpdatePropertySchema>;
@@ -41,8 +42,17 @@ export interface PropertyDto {
   supportEmail: string | null;
   brandColor: string | null;
   logoUrl: string | null;
+  timezone: string;
   settings: Record<string, any>;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WidgetPropertyConfigDto {
+  name: string;
+  brandColor: string | null;
+  logoUrl: string | null;
+  settings: Record<string, any>;
+  isOnline: boolean;
 }
 

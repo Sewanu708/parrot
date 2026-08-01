@@ -24,34 +24,35 @@ export const signupRoute = expressHandler({
 export const verifyEmailRoute = expressHandler({
   method: "get",
   path: "/auth/verify-email",
+  middlewares: [unauthenticatedLimiter],
   handler: AuthController.verifyEmail.bind(AuthController),
 });
 
 export const loginRoute = expressHandler({
   method: "post",
   path: "/auth/login",
-  middlewares: [validateRequest({ body: LoginSchema })],
+  middlewares: [unauthenticatedLimiter, validateRequest({ body: LoginSchema })],
   handler: AuthController.login.bind(AuthController),
 });
 
 export const forgotPasswordRoute = expressHandler({
   method: "post",
   path: "/auth/forgot-password",
-  middlewares: [validateRequest({ body: ForgotPasswordSchema })],
+  middlewares: [unauthenticatedLimiter, validateRequest({ body: ForgotPasswordSchema })],
   handler: AuthController.forgotPassword.bind(AuthController),
 });
 
 export const resetPasswordRoute = expressHandler({
   method: "post",
   path: "/auth/reset-password",
-  middlewares: [validateRequest({ body: ResetPasswordSchema })],
+  middlewares: [unauthenticatedLimiter, validateRequest({ body: ResetPasswordSchema })],
   handler: AuthController.resetPassword.bind(AuthController),
 });
 
 export const resendVerificationRoute = expressHandler({
   method: "post",
   path: "/auth/resend-verification",
-  middlewares: [validateRequest({ body: ResendVerificationSchema })],
+  middlewares: [unauthenticatedLimiter, validateRequest({ body: ResendVerificationSchema })],
   handler: AuthController.resendVerificationEmail.bind(AuthController),
 });
 

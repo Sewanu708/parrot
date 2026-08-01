@@ -57,3 +57,21 @@ export const HTTPStatusCode = {
   /** @type HttpStatusCodeNumber */
   HTTP_500_SERVER_ERROR: 500,
 };
+
+export const PERMISSIONS = {
+  CONVERSATIONS_READ: "conversations:read",
+  CONVERSATIONS_WRITE: "conversations:write",
+  CONVERSATIONS_ASSIGN: "conversations:assign",
+  TICKETS_READ: "tickets:read",
+  TICKETS_WRITE: "tickets:write",
+  KB_READ: "kb:read",
+  KB_WRITE: "kb:write",
+  KB_PUBLISH: "kb:publish",
+  CANNED_RESPONSES_MANAGE: "canned_responses:manage",
+  SETTINGS_MANAGE: "settings:manage",
+  TEAM_READ: "team:read",
+  TEAM_WRITE: "team:write",
+  ROLES_MANAGE: "roles:manage",
+} as const;
+
+export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
