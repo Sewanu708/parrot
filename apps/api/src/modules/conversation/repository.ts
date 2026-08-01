@@ -4,6 +4,7 @@ import {
   visitors,
   conversations,
   messages,
+  tickets,
 } from "@parrot/db/src/schema";
 import { eq, and, desc } from "drizzle-orm";
 import type {
@@ -12,6 +13,8 @@ import type {
 } from "@parrot/sdk";
 import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
+import { queue } from "../../shared/background";
+import { wsGateway } from "../../ws/gateway";
 
 export class ConversationRepository {
   /**
@@ -72,12 +75,33 @@ export class ConversationRepository {
           .values({
             tenantId: property.tenantId,
             visitorId: visitor.id,
-            status: "open",
+            status: "pending",
             channel: "chat",
           })
           .returning();
         conversation = newConv;
       }
+
+      if (conversation.status === "pending") {
+        queue.add(
+          "new:message",
+          {
+            conversationId: conversation.id,
+          },
+          {
+            delay: 120_000,
+            jobId: `pre-ticket-${conversation.id}`,
+          },
+        );
+      }
+
+      await tx
+        .update(conversations)
+        .set({
+          status: "pending",
+          lastMessageAt: new Date(),
+        })
+        .where(eq(conversations.id, conversation.id));
 
       // 4. Create the message
       const [newMessage] = await tx
@@ -131,6 +155,16 @@ export class ConversationRepository {
         .from(visitors)
         .where(eq(visitors.id, conversation.visitorId));
 
+      await tx
+        .update(conversations)
+        .set({
+          status: "open",
+          lastMessageAt: new Date(),
+        })
+        .where(eq(conversations.id, conversation.id));
+
+      queue.remove(`pre-ticket-${conversation.id}`);
+
       if (!existing) {
         appError("Visitor not found", ERROR_CODE.NOTFOUND, {
           code: "SL13",
@@ -144,6 +178,57 @@ export class ConversationRepository {
         tenantId: conversation.tenantId,
       };
     });
+  }
+
+  async autoReply(conversationId: string) {
+    const result = await db.transaction(async (tx) => {
+      const [conversation] = await tx
+      .select()
+      .from(conversations)
+      .where(
+        and(
+        eq(conversations.id, conversationId),
+        eq(conversations.status, "pending"),
+        ),
+      );
+
+      if (!conversation) return null;
+
+      const [newMessage] = await tx
+      .insert(messages)
+      .values({
+        conversationId: conversation.id,
+        senderType: "system",
+        body: "We're currently unavailable",
+      })
+      .returning();
+
+      await tx.insert(tickets).values({
+      tenantId: conversation.tenantId,
+      status: "open",
+      visitorId: conversation.visitorId,
+      });
+
+      return { conversation, newMessage };
+    });
+
+    if (!result) return;
+
+    const { conversation, newMessage } = result;
+
+    wsGateway.sendToVisitor(newMessage.visitorId!, {
+      event: "message:new",
+      data: {
+        id: newMessage.id,
+        conversationId: conversation.id,
+        tenantId: conversation.tenantId,
+        senderType: "system",
+        messageType: newMessage.messageType,
+        body: newMessage.body,
+        createdAt: newMessage.createdAt,
+      },
+    });
+
   }
 
   /**

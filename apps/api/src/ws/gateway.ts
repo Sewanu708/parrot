@@ -4,6 +4,7 @@ import { logger } from "../logger";
 import { db } from "@parrot/db/src/config";
 import { conversations, tenantMembers } from "@parrot/db/src/schema";
 import { eq } from "drizzle-orm";
+import { getRedisInstance } from "../shared/redis";
 
 export interface WSEvent<T = any> {
   event: string;
@@ -16,6 +17,7 @@ export class WSGateway {
   // In-memory maps for v1
   private agentSockets = new Map<string, Set<WebSocket>>();
   private visitorSockets = new Map<string, Set<WebSocket>>();
+  private redisInstance = getRedisInstance();
 
   /**
    * Attach WebSocket server to Node.js HTTP server
@@ -88,7 +90,15 @@ export class WSGateway {
           }
 
           if (type === "ping") {
-            // send pong to user id
+            // // send pong to user id
+            // socket.send("pong");
+            // reset ttl for user id
+            // we keep a list of all active user a
+            // redis stores this. client pings. we store there connection data in redis.
+            // if ping doesnt come in again, redis auto ttl deletes such client
+            this.redisInstance.set(payload.userId, "online", {
+              ttl: 60_000,
+            });
           }
         } catch (err) {
           logger.error({ err }, "Failed to process incoming WS message");
@@ -123,6 +133,8 @@ export class WSGateway {
         this.agentSockets.delete(userId);
       }
     }
+
+    this.redisInstance.del(userId);
   }
 
   registerVisitor(visitorId: string, socket: WebSocket) {
@@ -155,6 +167,8 @@ export class WSGateway {
       const messageStr = JSON.stringify(payload);
 
       for (const member of memberRecords) {
+        const isOnline = await this.redisInstance.get(member.userId);
+        if (!isOnline) continue;
         const sockets = this.agentSockets.get(member.userId);
         if (sockets && sockets.size > 0) {
           for (const socket of sockets) {

@@ -27,6 +27,7 @@ export const conversationStatusEnum = pgEnum("conversation_status", [
   "open",
   "assigned",
   "closed",
+  "pending",
 ]);
 
 export const channelTypeEnum = pgEnum("channel_type", ["chat", "email", "sms"]);
@@ -312,6 +313,9 @@ export const conversations = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    lastMessageAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -427,9 +431,12 @@ export const knowledgeBaseCategory: ReturnType<typeof pgTable> = pgTable(
     propertyId: uuid("property_id")
       .notNull()
       .references(() => properties.id, { onDelete: "cascade" }),
-      parentId: uuid("parent_id").references(() => (knowledgeBaseCategory as any).id, {
+    parentId: uuid("parent_id").references(
+      () => (knowledgeBaseCategory as any).id,
+      {
         onDelete: "set null",
-      }),
+      },
+    ),
     slug: text("slug").notNull(),
     name: text("name").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -499,7 +506,7 @@ export const businessHours = pgTable(
       .notNull()
       .references(() => properties.id, { onDelete: "cascade" }),
     dayOfWeek: integer("day_of_week").notNull(),
-    startTime: text("start_time").notNull(), 
+    startTime: text("start_time").notNull(),
     endTime: text("end_time").notNull(),
   },
   (table) => [
@@ -576,8 +583,6 @@ export const createCannedResponsesUniqueIndexPersonal = sql`
   WHERE visibility = 'personal'
 `;
 // TODO: add timezone to properties table
-
-
 
 // ──────────────────────────────────────────────
 //  Inferred Types
