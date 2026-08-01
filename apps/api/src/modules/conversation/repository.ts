@@ -84,7 +84,7 @@ export class ConversationRepository {
 
       if (conversation.status === "pending") {
         queue.add(
-          "new:message",
+          "new-message",
           {
             conversationId: conversation.id,
           },

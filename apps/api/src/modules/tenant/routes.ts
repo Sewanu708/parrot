@@ -3,7 +3,10 @@ import { TenantController } from "./controller";
 import { CreateTenantSchema, UpdateTenantSchema, UpdatePropertySchema } from "@parrot/sdk";
 import { validateRequest } from "../../shared/middleware/validate";
 import { authenticatedLimiter } from "../../shared/middleware/limiter";
-import { requireAuth } from "../../shared/middleware/auth"; // Assuming there is an auth middleware
+import { requireAuth } from "../../shared/middleware/auth";
+import { requireTenant } from "../../shared/middleware/tenant";
+import requestPermission from "../../shared/middleware/permissions";
+import { PERMISSIONS } from "../../express/constant";
 
 export const createTenantRoute = expressHandler({
   method: "post",
@@ -15,28 +18,28 @@ export const createTenantRoute = expressHandler({
 export const getTenantRoute = expressHandler({
   method: "get",
   path: "/tenants/:tenantId",
-  middlewares: [requireAuth, authenticatedLimiter],
+  middlewares: [requireAuth, requireTenant, authenticatedLimiter],
   handler: TenantController.get.bind(TenantController),
 });
 
 export const updateTenantRoute = expressHandler({
   method: "patch",
   path: "/tenants/:tenantId",
-  middlewares: [requireAuth, authenticatedLimiter, validateRequest({ body: UpdateTenantSchema })],
+  middlewares: [requireAuth, requireTenant, authenticatedLimiter, requestPermission(PERMISSIONS.SETTINGS_MANAGE), validateRequest({ body: UpdateTenantSchema })],
   handler: TenantController.update.bind(TenantController),
 });
 
 export const updatePropertyRoute = expressHandler({
   method: "patch",
   path: "/properties/:propertyId",
-  middlewares: [requireAuth, authenticatedLimiter, validateRequest({ body: UpdatePropertySchema })],
+  middlewares: [requireAuth, requireTenant, authenticatedLimiter, requestPermission(PERMISSIONS.SETTINGS_MANAGE), validateRequest({ body: UpdatePropertySchema })],
   handler: TenantController.updateProperty.bind(TenantController),
 });
 
 export const getPropertiesRoute = expressHandler({
   method: "get",
   path: "/tenants/:tenantId/properties",
-  middlewares: [requireAuth, authenticatedLimiter],
+  middlewares: [requireAuth, requireTenant, authenticatedLimiter],
   handler: TenantController.getProperties.bind(TenantController),
 });
 

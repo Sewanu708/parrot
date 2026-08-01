@@ -90,6 +90,8 @@ export const roles = pgTable(
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
+    isSystem: boolean("is_system").notNull().default(false),
+    description:text("description"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -251,6 +253,7 @@ export const properties = pgTable(
     supportEmail: text("support_email"),
     brandColor: text("brand_color"),
     logoUrl: text("logo_url"),
+    timezone: text("timezone").notNull().default("UTC"),
     settings: jsonb("settings").notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -313,7 +316,7 @@ export const conversations = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
-    lastMessageAt: timestamp("created_at", { withTimezone: true })
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true })
@@ -582,8 +585,6 @@ export const createCannedResponsesUniqueIndexPersonal = sql`
   ON canned_responses (tenant_id, owner_id, shortcut)
   WHERE visibility = 'personal'
 `;
-// TODO: add timezone to properties table
-
 // ──────────────────────────────────────────────
 //  Inferred Types
 // ──────────────────────────────────────────────

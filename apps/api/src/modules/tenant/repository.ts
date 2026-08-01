@@ -4,9 +4,18 @@ import {
   tenantMembers,
   roles,
   properties,
+  permissions,
+  rolePermissions,
+  businessHours,
 } from "@parrot/db/src/schema";
 import { eq, and } from "drizzle-orm";
-import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto } from "@parrot/sdk";
+import type {
+  CreateTenantDto,
+  UpdateTenantDto,
+  UpdatePropertyDto,
+} from "@parrot/sdk";
+import { PermissionKey, PERMISSIONS } from "../../express/constant";
+import { PgAsyncTransaction } from "drizzle-orm/pg-core";
 
 export class TenantRepository {
   async createTenantWithOwner(userId: string, data: CreateTenantDto) {
@@ -25,7 +34,7 @@ export class TenantRepository {
       }
 
       // 1b. Auto-provision the Default Property
-      const [newProperty] =await tx
+      const [newProperty] = await tx
         .insert(properties)
         .values({
           tenantId: newTenant.id,
@@ -38,22 +47,19 @@ export class TenantRepository {
         })
         .returning();
 
-      // 2. Create default roles (Owner, Admin, Agent)
-      const [ownerRole] = await tx
-        .insert(roles)
-        .values([
-          { tenantId: newTenant.id, name: "Owner" },
-          { tenantId: newTenant.id, name: "Admin" },
-          { tenantId: newTenant.id, name: "Agent" },
-        ])
-        .returning();
+      // 1c. Set default business hours (24/7)
+      const defaultHours = [];
+      for (let dayOfWeek = 0; dayOfWeek <= 6; dayOfWeek++) {
+        defaultHours.push({
+          propertyId: newProperty.id,
+          dayOfWeek,
+          startTime: "00:00",
+          endTime: "23:59",
+        });
+      }
+      await tx.insert(businessHours).values(defaultHours);
 
-      // 3. Add the user as the Owner of this tenant
-      await tx.insert(tenantMembers).values({
-        tenantId: newTenant.id,
-        userId: userId,
-        roleId: ownerRole.id,
-      });
+      await this.seedRolePermissions(newTenant.id, userId, tx);
 
       return { tenant: newTenant, defaultProperty: newProperty };
     });
@@ -67,6 +73,60 @@ export class TenantRepository {
     return tenant;
   }
 
+  private async seedRolePermissions(
+    tenantId: string,
+    userId: string,
+    tx: PgAsyncTransaction<any, any>,
+  ) {
+    // 2. Create default roles (Owner, Admin, Agent)
+    const [ownerRole, adminRole, agentRole] = await tx
+      .insert(roles)
+      .values([
+        { tenantId: tenantId, name: "Owner", isSystem: true },
+        { tenantId: tenantId, name: "Admin", isSystem: true },
+        { tenantId: tenantId, name: "Agent", isSystem: true },
+      ])
+      .returning();
+
+    // 3. Map default roles to permissions
+    const allPerms = await tx.select().from(permissions);
+    const rolePermsToInsert: { roleId: string; permissionId: string }[] = [];
+
+    const agentPermNames: PermissionKey[] = [
+      PERMISSIONS.CONVERSATIONS_READ,
+      PERMISSIONS.CONVERSATIONS_WRITE,
+      PERMISSIONS.CONVERSATIONS_ASSIGN,
+      PERMISSIONS.TICKETS_READ,
+      PERMISSIONS.TICKETS_WRITE,
+      PERMISSIONS.KB_READ,
+      PERMISSIONS.TEAM_READ,
+    ];
+
+    allPerms.forEach((p) => {
+      // Owner gets absolutely everything
+      rolePermsToInsert.push({ roleId: ownerRole.id, permissionId: p.id });
+
+      // Admin gets everything (same as owner for now)
+      rolePermsToInsert.push({ roleId: adminRole.id, permissionId: p.id });
+
+      // Agent gets restricted day-to-day permissions
+
+      if (agentPermNames.includes(p.name as PermissionKey)) {
+        rolePermsToInsert.push({ roleId: agentRole.id, permissionId: p.id });
+      }
+    });
+
+    if (rolePermsToInsert.length > 0) {
+      await tx.insert(rolePermissions).values(rolePermsToInsert);
+    }
+
+    // 4. Add the user as the Owner of this tenant
+    await tx.insert(tenantMembers).values({
+      tenantId: tenantId,
+      userId: userId,
+      roleId: ownerRole.id,
+    });
+  }
   async updateTenant(tenantId: string, data: UpdateTenantDto) {
     const [updatedTenant] = await db
       .update(tenants)
@@ -115,6 +175,89 @@ export class TenantRepository {
       .from(properties)
       .where(eq(properties.tenantId, tenantId))
       .orderBy(properties.createdAt);
+  }
+
+  static async seedPermissions() {
+    const permissionsDef = [
+      {
+        key: PERMISSIONS.CONVERSATIONS_READ,
+        description: "View the shared inbox and read chats",
+        category: "Conversations",
+      },
+      {
+        key: PERMISSIONS.CONVERSATIONS_WRITE,
+        description: "Send messages to visitors.",
+        category: "Conversations",
+      },
+      {
+        key: PERMISSIONS.CONVERSATIONS_ASSIGN,
+        description: "Assign or reassign conversations to other agents.",
+        category: "Conversations",
+      },
+      {
+        key: PERMISSIONS.TICKETS_READ,
+        description: "View tickets.",
+        category: "Ticketing",
+      },
+      {
+        key: PERMISSIONS.TICKETS_WRITE,
+        description: "Reply to and update the status of tickets.",
+        category: "Ticketing",
+      },
+      {
+        key: PERMISSIONS.KB_READ,
+        description: "Read articles internally.",
+        category: "Knowledge Base",
+      },
+      {
+        key: PERMISSIONS.KB_WRITE,
+        description: "Create and edit article drafts.",
+        category: "Knowledge Base",
+      },
+      {
+        key: PERMISSIONS.KB_PUBLISH,
+        description:
+          "Approve and publish articles to the public SEO routes (this is the one we restrict to Admins).",
+        category: "Knowledge Base",
+      },
+      {
+        key: PERMISSIONS.CANNED_RESPONSES_MANAGE,
+        description:
+          "Create and edit shared canned responses for the whole tenant (everyone can manage their own personal ones by default).",
+        category: "Agent Productivity",
+      },
+      {
+        key: PERMISSIONS.SETTINGS_MANAGE,
+        description:
+          "Update widget brand colors, business hours, and offline behavior.",
+        category: "Settings & Configuration",
+      },
+      {
+        key: PERMISSIONS.TEAM_READ,
+        description: "View the list of tenant members.",
+        category: "Team & Access Management",
+      },
+      {
+        key: PERMISSIONS.TEAM_WRITE,
+        description: "Invite new members and revoke access.",
+        category: "Team & Access Management",
+      },
+      {
+        key: PERMISSIONS.ROLES_MANAGE,
+        description:
+          "Create, edit, and assign custom roles (Highly restricted).",
+        category: "Team & Access Management",
+      },
+    ];
+    for (const element of permissionsDef) {
+      await db
+        .insert(permissions)
+        .values({
+          name: element.key,
+          description: element.description,
+        })
+        .onConflictDoNothing();
+    }
   }
 }
 
