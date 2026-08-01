@@ -29,7 +29,7 @@ flowchart TD
     end
 
     %% Visitor / Widget Integration
-    subgraph WidgetFlow [Widget Integration (RAG)]
+    subgraph WidgetFlow ["Widget Integration (RAG)"]
         Widget["Widget"]
         Questions[/"Pre-defined Questions:\n- How do I reset my password\n- What's the billing policy\n- How's my personal data handled"/]
         
