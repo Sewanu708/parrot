@@ -1,0 +1,1 @@
+ALTER TABLE "properties" ADD COLUMN "timezone" text DEFAULT 'UTC' NOT NULL;

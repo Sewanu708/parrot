@@ -23,7 +23,7 @@ export const unauthenticatedLimiter = expressHandler({
   middlewares: [],
   handler: async (req: RequestComponents): Promise<HandlerResult> => {
     const clientIP = requestIP.getClientIp(req) ?? "unknown";
-    const resp = await _unauthThrottle.consume(clientIP, 1);
+    const resp = await _unauthThrottle.consume(`rate_limit:${clientIP}`, 1);
 
     const responseHeaders = {
       "X-RateLimit-Limit": resp.limit,
@@ -67,7 +67,7 @@ export const authenticatedLimiter = expressHandler({
       );
     }
 
-    const resp = await _authThrottle.consume(userId, 1);
+    const resp = await _authThrottle.consume(`rate_limit:${userId}`, 1);
 
     const responseHeaders = {
       "X-RateLimit-Limit": resp.limit,

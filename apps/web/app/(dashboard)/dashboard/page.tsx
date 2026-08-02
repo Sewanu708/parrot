@@ -18,7 +18,7 @@ export default function AutomationsPage() {
           Set up rules and bot replies for your widget.
         </p>
 
-        <div className="flex-1 flex items-center justify-center min-h-[400px] text-[#37352f]/40 dark:text-[#555555] text-sm">
+        <div className="flex-1 flex items-center justify-center min-h-100 text-[#37352f]/40 dark:text-[#555555] text-sm">
           Automation rules will live here.
         </div>
       </div>

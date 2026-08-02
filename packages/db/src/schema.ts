@@ -91,7 +91,7 @@ export const roles = pgTable(
       .references(() => tenants.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     isSystem: boolean("is_system").notNull().default(false),
-    description:text("description"),
+    description: text("description"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -255,6 +255,9 @@ export const properties = pgTable(
     logoUrl: text("logo_url"),
     timezone: text("timezone").notNull().default("UTC"),
     settings: jsonb("settings").notNull().default({}),
+    allowedDomains: text("allowed_domains")
+      .array()
+      .default([]),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

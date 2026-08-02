@@ -2,7 +2,7 @@ import expressHandler from "../../express/handler";
 import { ConversationController } from "./controller";
 import { VisitorConversationSchema, SendAgentMessageSchema } from "@parrot/sdk";
 import { validateRequest } from "../../shared/middleware/validate";
-import { requireAuth } from "../../shared/middleware/auth";
+import { requireAuth, optionalVisitorAuth, requireVisitorAuth } from "../../shared/middleware/auth";
 import { requireTenant } from "../../shared/middleware/tenant";
 import requestPermission from "../../shared/middleware/permissions";
 import { PERMISSIONS } from "../../express/constant";
@@ -11,7 +11,7 @@ import { authenticatedLimiter, unauthenticatedLimiter } from "../../shared/middl
 export const sendVisitorMessageRoute = expressHandler({
   method: "post",
   path: "/widget/messages",
-  middlewares: [unauthenticatedLimiter, validateRequest({ body: VisitorConversationSchema })],
+  middlewares: [unauthenticatedLimiter, optionalVisitorAuth, validateRequest({ body: VisitorConversationSchema })],
   handler: ConversationController.sendVisitorMessage.bind(
     ConversationController,
   ),
@@ -44,9 +44,17 @@ export const getConversationsRoute = expressHandler({
   handler: ConversationController.getConversations.bind(ConversationController),
 });
 
+export const getVisitorMessagesRoute = expressHandler({
+  method: "get",
+  path: "/widget/conversations/:conversationId/messages",
+  middlewares: [unauthenticatedLimiter, requireVisitorAuth],
+  handler: ConversationController.getMessages.bind(ConversationController),
+});
+
 export const conversationRoutes = [
   sendVisitorMessageRoute,
   sendAgentMessageRoute,
   getConversationMessagesRoute,
   getConversationsRoute,
+  getVisitorMessagesRoute,
 ];

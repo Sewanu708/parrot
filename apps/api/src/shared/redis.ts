@@ -4,7 +4,6 @@ import { env } from "./env";
 
 export class RedisService {
   public redis: Redis;
-  private isReady = false;
 
   constructor() {
     const dbUrl = env.REDIS_URL;
@@ -14,12 +13,10 @@ export class RedisService {
 
     this.redis.on("error", (err) => {
       logger.error(`IoRedis connection error: ${err.message}`);
-      this.isReady = false;
     });
 
     this.redis.on("connect", () => {
       logger.info("IoRedis connected!");
-      this.isReady = true;
     });
 
     this.redis.on("reconnecting", (delay: number) => {
@@ -28,7 +25,6 @@ export class RedisService {
 
     this.redis.on("end", () => {
       logger.warn("IoRedis connection ended.");
-      this.isReady = false;
     });
   }
 

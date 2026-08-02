@@ -1,3 +1,7 @@
 node_modules
 *.env
 TODO.md
+dist
+apps/widget/dist/*
+apps/widget/dist/widget.js
+apps/widget/dist/widget.js.map

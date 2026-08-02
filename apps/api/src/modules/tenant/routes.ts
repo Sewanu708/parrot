@@ -3,7 +3,7 @@ import { TenantController } from "./controller";
 import { CreateTenantSchema, UpdateTenantSchema, UpdatePropertySchema } from "@parrot/sdk";
 import { validateRequest } from "../../shared/middleware/validate";
 import { authenticatedLimiter, unauthenticatedLimiter } from "../../shared/middleware/limiter";
-import { requireAuth } from "../../shared/middleware/auth";
+import { requireAuth, requireVisitorAuth } from "../../shared/middleware/auth";
 import { requireTenant } from "../../shared/middleware/tenant";
 import requestPermission from "../../shared/middleware/permissions";
 import { PERMISSIONS } from "../../express/constant";
@@ -46,7 +46,7 @@ export const getPropertiesRoute = expressHandler({
 export const getWidgetConfigRoute = expressHandler({
   method: "get",
   path: "/widget/properties/:propertyId",
-  middlewares: [unauthenticatedLimiter],
+  middlewares: [unauthenticatedLimiter, requireVisitorAuth],
   handler: TenantController.getWidgetConfig.bind(TenantController),
 });
 

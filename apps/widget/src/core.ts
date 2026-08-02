@@ -12,7 +12,9 @@ export class ParrotWidget {
 
   constructor() {
     // 1. Parse Script Tag attributes
-    const script = (document.currentScript as HTMLScriptElement) || document.querySelector("script[data-property-id]");
+    const script =
+      (document.currentScript as HTMLScriptElement) ||
+      document.querySelector("script[data-property-id]");
     const propertyId = script?.getAttribute("data-property-id");
     const host = script?.getAttribute("data-host") || "http://localhost:8080";
 
@@ -29,9 +31,8 @@ export class ParrotWidget {
     }
     const conversationId = localStorage.getItem("parrot_conversation_id");
 
-    
-    this.api = new WidgetApi(host,visitorId,propertyId)
-    this.ui = new WidgetUI()
+    this.api = new WidgetApi(host, visitorId, propertyId);
+    this.ui = new WidgetUI();
 
     // 3. Init State
     this.state = {
@@ -42,12 +43,8 @@ export class ParrotWidget {
       propertyId,
       visitorId,
       conversationId,
-      isTyping: false
+      isTyping: false,
     };
-
-    // 4. Init Modules
-    this.api = new WidgetApi(host, visitorId, propertyId);
-    this.ui = new WidgetUI();
 
     // 5. Bind UI Callbacks
     this.ui.onToggleOpen = () => this.toggleOpen();
@@ -69,7 +66,9 @@ export class ParrotWidget {
 
     // Fetch message history if convo exists
     if (this.state.conversationId) {
-      this.state.messages = await this.api.fetchMessageHistory(this.state.conversationId);
+      this.state.messages = await this.api.fetchMessageHistory(
+        this.state.conversationId,
+      );
       this.render();
     }
 
@@ -77,7 +76,7 @@ export class ParrotWidget {
     this.api.connectWebSocket(
       this.state.conversationId,
       (msg) => this.receiveMessage(msg),
-      () => this.receiveTyping()
+      () => this.receiveTyping(),
     );
   }
 
@@ -105,11 +104,30 @@ export class ParrotWidget {
     this.render();
 
     // API Call
-    const newConvId = await this.api.sendMessage(text, this.state.conversationId);
-    if (newConvId && newConvId !== this.state.conversationId) {
-      this.state.conversationId = newConvId;
-      localStorage.setItem("parrot_conversation_id", newConvId);
-      // Ensure WS knows about the new conversation if it needs to (it's handled by server emitting to visitor ID)
+    try {
+      const newConvId = await this.api.sendMessage(
+        text,
+        this.state.conversationId,
+      );
+      if (newConvId && newConvId !== this.state.conversationId) {
+        this.state.conversationId = newConvId;
+        localStorage.setItem("parrot_conversation_id", newConvId);
+        // Ensure WS knows about the new conversation if it needs to (it's handled by server emitting to visitor ID)
+      }
+    } catch (error) {
+      // token might have expired. 401 would be returned by the server. catch and retrigger as a new message.
+      if (error instanceof Error && error.message.includes("unauthorized")) {
+        localStorage.removeItem("parrot_conversation_id");
+        localStorage.removeItem("parrot_visitor_token");
+        this.state.conversationId = null;
+        this.state.messages = [];
+
+        const newConvId = await this.api.sendMessage(text, null);
+        this.state.conversationId = newConvId;
+        newConvId && localStorage.setItem("parrot_conversation_id", newConvId);
+      }
+
+      throw error;
     }
   }
 
@@ -123,8 +141,8 @@ export class ParrotWidget {
   }
 
   private receiveMessage(msg: WidgetMessage) {
-    if (msg.senderType === "visitor") return; // Ignore own WS echoes
-    
+    if (msg.senderType === "visitor") return;
+
     this.state.isTyping = false; // Cancel typing
     this.state.messages.push(msg);
     this.render();

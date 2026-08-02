@@ -1,0 +1,1 @@
+ALTER TABLE "properties" ADD COLUMN "allowed_domains" text[] DEFAULT '{}'::text[];
