@@ -2,6 +2,7 @@
   "name": "@parrot/widget",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -11,7 +12,9 @@
     "@parrot/sdk": "workspace:*"
   },
   "devDependencies": {
+    "terser": "^5.49.0",
     "typescript": "^5.6.0",
-    "vite": "^5.4.21"
+    "vite": "^5.4.21",
+    "vite-plugin-css-injected-by-js": "^5.0.2"
   }
 }

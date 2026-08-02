@@ -30,7 +30,6 @@ export class ParrotClient {
 
   setTenantId(tenantId: string | undefined) {
     this.http.setTenantId(tenantId);
-    this.ws.setTenantId(tenantId);
   }
 }
 
