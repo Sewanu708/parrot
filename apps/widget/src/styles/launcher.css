@@ -1,0 +1,46 @@
+/* Launcher Button */
+.launcher-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 9999;
+  position: relative;
+}
+
+.launcher-btn:hover {
+  transform: scale(1.08) translateY(-2px);
+  background: var(--primary-hover);
+}
+
+.launcher-btn svg {
+  width: 28px;
+  height: 28px;
+  fill: currentColor;
+  transition: transform 0.3s ease;
+}
+
+.launcher-btn.open svg {
+  transform: rotate(90deg) scale(0);
+  opacity: 0;
+  position: absolute;
+}
+
+.launcher-btn .close-icon {
+  position: absolute;
+  transform: rotate(-90deg) scale(0);
+  opacity: 0;
+}
+
+.launcher-btn.open .close-icon {
+  transform: rotate(0) scale(1);
+  opacity: 1;
+}
