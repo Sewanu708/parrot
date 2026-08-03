@@ -9,7 +9,10 @@ export class WidgetApi {
     private visitorId: string,
     private propertyId: string
   ) {
-    this.client = new ParrotClient({ baseUrl: apiHost });
+    this.client = new ParrotClient({ 
+      baseUrl: apiHost,
+      getToken: () => localStorage.getItem("parrot_visitor_token") || undefined
+    });
   }
 
   async fetchConfig(): Promise<WidgetPropertyConfigDto | null> {
@@ -24,7 +27,7 @@ export class WidgetApi {
 
   async fetchMessageHistory(conversationId: string): Promise<WidgetMessage[]> {
     try {
-      const res = await this.client.conversation.getMessages(conversationId);
+      const res = await this.client.widget.getMessages(conversationId);
       if (res.data && Array.isArray(res.data)) {
         return res.data.map((msg: MessageDto) => ({
           id: msg.id,
@@ -49,6 +52,11 @@ export class WidgetApi {
         body: text,
       };
       const res = await this.client.widget.sendMessage(payload);
+      
+      if (res.data && res.data.token) {
+        localStorage.setItem("parrot_visitor_token", res.data.token);
+      }
+
       if (res.data && res.data.conversationId) {
         return res.data.conversationId;
       }

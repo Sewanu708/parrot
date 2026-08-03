@@ -5,7 +5,7 @@ import { db } from "@parrot/db/src/config";
 import { sessions, users } from "@parrot/db/src/schema";
 import { eq } from "drizzle-orm";
 import expressHandler from "../../express/handler";
-import { getRequestContext } from "../utils/global";
+import { decodeJWT, getRequestContext } from "../utils/global";
 import { logger } from "../../logger";
 
 export const requireAuth = expressHandler({
@@ -56,5 +56,78 @@ export const requireAuth = expressHandler({
         },
       },
     };
+  },
+});
+
+// for endpoints like /get messages. This token is required. else, it's assumed on the widget side that it's a new conversation. 
+// btw, if /get messages cant be called if there's no conversation id. 
+
+
+export const requireVisitorAuth = expressHandler({
+  path: "*",
+  method: "get",
+  handler: async (req: RequestComponents): Promise<HandlerResult> => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      appError(
+        "Missing or invalid authorization header",
+        ERROR_CODE.NOAUTHERR,
+        { code: "SL07" },
+      );
+    }
+
+    const token = authHeader.split(" ")[1];
+    const payload = decodeJWT(token) as {
+      conversationId: string;
+      visitorId: string;
+    };
+    if (payload.conversationId !== req.params.conversationId) {
+      appError(
+        "Missing or invalid authorization header",
+        ERROR_CODE.NOAUTHERR,
+        { code: "SL07" },
+      );
+    }
+
+    return {
+      augments: {
+        meta: {
+          ...req.meta,
+          visitor: payload,
+        },
+      },
+    };
+  },
+});
+
+// if the visitor is new, there's no auth header. as such we check the origin against the property's registered origins. if there's any match, we create a jwt token that'd be attached to all other reuquest
+
+export const optionalVisitorAuth = expressHandler({
+  path: "*",
+  method: "get",
+  handler: async (req: RequestComponents): Promise<HandlerResult> => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return { augments: {} };
+    }
+
+    try {
+      const token = authHeader.split(" ")[1];
+      const payload = decodeJWT(token) as {
+        conversationId: string;
+        visitorId: string;
+      };
+      
+      return {
+        augments: {
+          meta: {
+            ...req.meta,
+            visitor: payload,
+          },
+        },
+      };
+    } catch (err) {
+      return { augments: {} };
+    }
   },
 });

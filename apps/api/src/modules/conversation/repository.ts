@@ -15,12 +15,17 @@ import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
 import { queue } from "../../shared/background";
 import { wsGateway } from "../../ws/gateway";
+import { logger } from "../../logger";
 
 export class ConversationRepository {
   /**
    * Visitor sends a message via widget
    */
-  async createVisitorMessage(data: SendVisitorMessageInput) {
+  async createVisitorMessage(
+    data: SendVisitorMessageInput,
+    origin?: string,
+    visitorAuth?: { conversationId: string; visitorId: string },
+  ) {
     return await db.transaction(async (tx) => {
       const [property] = await tx
         .select()
@@ -31,6 +36,16 @@ export class ConversationRepository {
         appError("Property not found", ERROR_CODE.NOTFOUND, {
           code: "SL12",
         });
+      }
+
+      if (!visitorAuth) {
+        if (property.allowedDomains && property.allowedDomains.length > 0) {
+          if (!origin || !property.allowedDomains.includes(origin)) {
+            appError("Unauthorized domain", ERROR_CODE.NOAUTHERR, {
+              code: "SL07",
+            });
+          }
+        }
       }
 
       // 2. Find or create visitor
@@ -183,40 +198,41 @@ export class ConversationRepository {
   async autoReply(conversationId: string) {
     const result = await db.transaction(async (tx) => {
       const [conversation] = await tx
-      .select()
-      .from(conversations)
-      .where(
-        and(
-        eq(conversations.id, conversationId),
-        eq(conversations.status, "pending"),
-        ),
-      );
+        .select()
+        .from(conversations)
+        .where(
+          and(
+            eq(conversations.id, conversationId),
+            eq(conversations.status, "pending"),
+          ),
+        );
 
       if (!conversation) return null;
 
       const [newMessage] = await tx
-      .insert(messages)
-      .values({
-        conversationId: conversation.id,
-        senderType: "system",
-        body: "We're currently unavailable",
-      })
-      .returning();
+        .insert(messages)
+        .values({
+          conversationId: conversation.id,
+          senderType: "system",
+          body: "We're currently unavailable",
+        })
+        .returning();
 
       await tx.insert(tickets).values({
-      tenantId: conversation.tenantId,
-      status: "open",
-      visitorId: conversation.visitorId,
+        tenantId: conversation.tenantId,
+        status: "open",
+        visitorId: conversation.visitorId,
       });
 
       return { conversation, newMessage };
     });
-
+    logger.info(`[AUTOREPLY HANDLER] ${result}`);
     if (!result) return;
-
     const { conversation, newMessage } = result;
+    
 
-    wsGateway.sendToVisitor(newMessage.visitorId!, {
+    logger.info(`[AUTOREPLY HANDLER -> SENDING] ${JSON.stringify(result)}`);
+    wsGateway.sendToVisitor(result.conversation.visitorId!, {
       event: "message:new",
       data: {
         id: newMessage.id,
@@ -228,7 +244,6 @@ export class ConversationRepository {
         createdAt: newMessage.createdAt,
       },
     });
-
   }
 
   /**

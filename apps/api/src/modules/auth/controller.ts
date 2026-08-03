@@ -132,7 +132,6 @@ export class AuthController {
     }
 
     if (!user.emailVerified) {
-      // You can decide whether to block login or just return a flag
       appError(
         "Please verify your email before logging in",
         ERROR_CODE.AUTHERR,
@@ -146,7 +145,7 @@ export class AuthController {
 
     // Create session token
     const sessionToken = randomBytes(32).toString("hex");
-    const sessionExpiresAt = new Date(Date.now() + ONE_DAY); // 30 days
+    const sessionExpiresAt = new Date(Date.now() + ONE_DAY); 
 
     await AuthRepository.createSession(
       user.id,

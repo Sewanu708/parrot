@@ -47,6 +47,7 @@ export interface ConversationDto {
 export interface SendMessageResponse {
   conversationId: string;
   message: MessageDto;
+  token?: string;
 }
 
 export interface VisitorDto {

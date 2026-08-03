@@ -2,6 +2,7 @@ import type { HttpClient } from "../http";
 import type {
   SendMessageResponse,
   SendVisitorMessageInput,
+  MessageDto,
 } from "../../schema/conversation";
 import type { WidgetPropertyConfigDto } from "../../schema/tenant";
 
@@ -13,6 +14,10 @@ export class WidgetModule {
   }
 
   async fetchConfig(propertyId: string) {
-    return this.http.get<WidgetPropertyConfigDto>(`/api/v1/widget/properties/${propertyId}`);
+    return this.http.get<WidgetPropertyConfigDto>(`/widget/properties/${propertyId}`);
+  }
+
+  async getMessages(conversationId: string) {
+    return this.http.get<MessageDto[]>(`/widget/conversations/${conversationId}/messages`);
   }
 }

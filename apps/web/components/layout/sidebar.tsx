@@ -20,10 +20,8 @@ import {
 import { useSidebar } from "./sidebar-provider";
 import { ROUTES } from "@/lib/constants";
 
-// Workspaces are now dynamically loaded from session
-
 const navigation = [
-  { name: "Overview", href: ROUTES.DASHBOARD.ROOT, icon: InboxIcon }, // Re-using InboxIcon temporarily for Overview, though ideally we'd have a specific icon.
+  { name: "Overview", href: ROUTES.DASHBOARD.ROOT, icon: InboxIcon },
   { name: "Inbox", href: ROUTES.DASHBOARD.INBOX, icon: InboxIcon },
   { name: "Contacts", href: ROUTES.DASHBOARD.CONTACTS, icon: ContactsIcon },
   {
@@ -31,7 +29,11 @@ const navigation = [
     href: ROUTES.DASHBOARD.AUTOMATIONS,
     icon: AutomationsIcon,
   },
-  { name: "Settings", href: ROUTES.DASHBOARD.SETTINGS.ROOT, icon: SettingsIcon },
+  {
+    name: "Settings",
+    href: ROUTES.DASHBOARD.SETTINGS.ROOT,
+    icon: SettingsIcon,
+  },
 ];
 
 export function Sidebar() {
@@ -41,8 +43,14 @@ export function Sidebar() {
   const [mounted, setMounted] = useState(false);
   const { data: session, update: updateSession } = useSession();
   const workspaces = session?.user?.tenants || [];
-  const [activeWorkspaceState, setActiveWorkspaceState] = useState<any>(null);
-  const activeWorkspace = activeWorkspaceState || workspaces.find((w: any) => w.id === session?.user?.activeTenantId) || workspaces[0] || { id: "loading", name: "..." };
+  const [activeWorkspaceState, setActiveWorkspaceState] = useState<{
+    id: string;
+    logoUrl: string;
+    name: string;
+  } | null>(null);
+  const activeWorkspace =
+    activeWorkspaceState ||
+    workspaces.find((w) => w.id === session?.user?.activeTenantId);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isTempExpanded, setIsTempExpanded] = useState(false);
@@ -81,8 +89,10 @@ export function Sidebar() {
   }, [setIsCollapsed]);
 
   return (
-    <div className={`relative h-screen shrink-0 transition-[width] duration-300 ${isCollapsed ? "w-14" : "w-60"} z-50`}>
-      <div 
+    <div
+      className={`relative h-screen shrink-0 transition-[width] duration-300 ${isCollapsed ? "w-14" : "w-60"} z-50`}
+    >
+      <div
         onMouseEnter={() => {
           if (isCollapsed) setIsTempExpanded(true);
         }}
@@ -97,15 +107,21 @@ export function Sidebar() {
         } ${isCollapsed && isTempExpanded ? "shadow-[4px_0_24px_rgba(0,0,0,0.08)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.5)]" : ""}`}
       >
         {/* Top Section */}
-        <div className={`p-3 space-y-4 w-full flex flex-col ${visuallyCollapsed ? "items-center px-2" : ""}`}>
+        <div
+          className={`p-3 space-y-4 w-full flex flex-col ${visuallyCollapsed ? "items-center px-2" : ""}`}
+        >
           {/* Logo and Collapse Toggle */}
-          <div className={`flex items-center ${visuallyCollapsed ? "justify-center w-full" : "justify-between px-2"} mb-2 mt-1`}>
+          <div
+            className={`flex items-center ${visuallyCollapsed ? "justify-center w-full" : "justify-between px-2"} mb-2 mt-1`}
+          >
             <Link
               href="/"
               className="flex items-center gap-2 font-bold text-lg text-[#37352f] dark:text-[#ffffff] w-fit"
             >
               {visuallyCollapsed ? "p." : "parrot."}
-              {!visuallyCollapsed && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />}
+              {!visuallyCollapsed && (
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              )}
             </Link>
             {!visuallyCollapsed && (
               <button
@@ -116,7 +132,9 @@ export function Sidebar() {
                 className="opacity-0 group-hover/sidebar:opacity-100 transition-opacity p-1 hover:bg-black/5 dark:hover:bg-white/10 rounded-md text-[#37352f]/60 dark:text-[#9b9b9b] cursor-pointer"
                 title={isCollapsed ? "Pin Sidebar" : "Collapse Sidebar"}
               >
-                <ChevronsLeftIcon className={`w-4 h-4 transition-transform ${isCollapsed ? "rotate-180" : ""}`} />
+                <ChevronsLeftIcon
+                  className={`w-4 h-4 transition-transform ${isCollapsed ? "rotate-180" : ""}`}
+                />
               </button>
             )}
           </div>
@@ -129,15 +147,19 @@ export function Sidebar() {
                 className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer outline-none"
               >
                 <div className="flex items-center gap-2.5 truncate">
-                  {activeWorkspace.logoUrl ? (
-                    <img src={activeWorkspace.logoUrl} alt={activeWorkspace.name} className="h-5 w-5 rounded-sm object-cover shrink-0 bg-white" />
+                  {activeWorkspace?.logoUrl ? (
+                    <img
+                      src={activeWorkspace.logoUrl}
+                      alt={activeWorkspace.name}
+                      className="h-5 w-5 rounded-sm object-cover shrink-0 bg-white"
+                    />
                   ) : (
                     <div className="h-5 w-5 rounded-sm bg-black/10 dark:bg-white/10 flex items-center justify-center text-[11px] font-semibold text-[#37352f] dark:text-[#ffffff] shrink-0">
-                      {activeWorkspace.name.charAt(0)}
+                      {activeWorkspace?.name.charAt(0)}
                     </div>
                   )}
                   <span className="truncate text-[#37352f] dark:text-[#ffffff]">
-                    {activeWorkspace.name}
+                    {activeWorkspace?.name}
                   </span>
                 </div>
                 <SelectorIcon className="w-3.5 h-3.5 opacity-50 shrink-0" />
@@ -146,7 +168,7 @@ export function Sidebar() {
               {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <div className="absolute top-full mt-1 left-0 w-full rounded-md border border-[#e9e9e7] dark:border-[#333333] bg-white dark:bg-[#252525] p-1 shadow-lg z-50">
-                  {workspaces.map((workspace: any) => (
+                  {workspaces?.map((workspace: any) => (
                     <button
                       key={workspace.id}
                       onClick={async () => {
@@ -157,19 +179,23 @@ export function Sidebar() {
                           user: {
                             ...session?.user,
                             activeTenantId: workspace.id,
-                          }
+                          },
                         });
                         window.location.reload(); // Ensure all client states are cleared and refetched for the new tenant
                       }}
                       className={`flex w-full items-center justify-between px-2 py-1.5 rounded-sm text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer ${
-                        activeWorkspace.id === workspace.id
+                        activeWorkspace?.id === workspace.id
                           ? "bg-black/5 dark:bg-white/5 text-[#37352f] dark:text-[#ffffff]"
                           : "text-[#37352f]/80 dark:text-[#d4d4d4]"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
                         {workspace.logoUrl ? (
-                          <img src={workspace.logoUrl} alt={workspace.name} className="h-4 w-4 rounded-[3px] object-cover shrink-0 bg-white" />
+                          <img
+                            src={workspace.logoUrl}
+                            alt={workspace.name}
+                            className="h-4 w-4 rounded-[3px] object-cover shrink-0 bg-white"
+                          />
                         ) : (
                           <div className="h-4 w-4 rounded-[3px] bg-black/10 dark:bg-white/10 flex items-center justify-center text-[10px] font-semibold text-[#37352f] dark:text-[#ffffff] shrink-0">
                             {workspace.name.charAt(0)}
@@ -189,23 +215,29 @@ export function Sidebar() {
                     href={ROUTES.ONBOARDING.WORKSPACE}
                     className="flex w-full items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm text-[#37352f]/60 dark:text-[#9b9b9b] transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                   >
-                    <span className="text-base leading-none font-light shrink-0">+</span>
+                    <span className="text-base leading-none font-light shrink-0">
+                      +
+                    </span>
                     <span className="truncate">New workspace</span>
                   </Link>
                 </div>
               )}
             </div>
           ) : (
-            <button 
-              className="flex items-center justify-center rounded-md p-1.5 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer outline-none mt-2" 
-              title={activeWorkspace.name}
+            <button
+              className="flex items-center justify-center rounded-md p-1.5 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer outline-none mt-2"
+              title={activeWorkspace?.name}
               onClick={() => setIsTempExpanded(true)}
             >
-              {activeWorkspace.logoUrl ? (
-                <img src={activeWorkspace.logoUrl} alt={activeWorkspace.name} className="h-5 w-5 rounded-sm object-cover bg-white" />
+              {activeWorkspace?.logoUrl ? (
+                <img
+                  src={activeWorkspace?.logoUrl}
+                  alt={activeWorkspace.name}
+                  className="h-5 w-5 rounded-sm object-cover bg-white"
+                />
               ) : (
                 <div className="h-5 w-5 rounded-sm bg-black/10 dark:bg-white/10 flex items-center justify-center text-[11px] font-semibold text-[#37352f] dark:text-[#ffffff]">
-                  {activeWorkspace.name.charAt(0)}
+                  {activeWorkspace?.name.charAt(0)}
                 </div>
               )}
             </button>
@@ -213,9 +245,16 @@ export function Sidebar() {
         </div>
 
         {/* Global Actions */}
-        <div className={`px-3 space-y-0.5 mb-2 mt-1 w-full flex flex-col ${visuallyCollapsed ? "items-center" : ""}`}>
-          <button className={`flex w-full items-center ${visuallyCollapsed ? "justify-center" : "justify-between"} gap-2.5 rounded-md ${visuallyCollapsed ? "p-2" : "px-2 py-1.5"} text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 text-[#37352f]/70 dark:text-[#9b9b9b] cursor-pointer outline-none group`} title={visuallyCollapsed ? "Search" : undefined}>
-            <div className={`flex items-center ${visuallyCollapsed ? "justify-center" : "gap-2.5"}`}>
+        <div
+          className={`px-3 space-y-0.5 mb-2 mt-1 w-full flex flex-col ${visuallyCollapsed ? "items-center" : ""}`}
+        >
+          <button
+            className={`flex w-full items-center ${visuallyCollapsed ? "justify-center" : "justify-between"} gap-2.5 rounded-md ${visuallyCollapsed ? "p-2" : "px-2 py-1.5"} text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 text-[#37352f]/70 dark:text-[#9b9b9b] cursor-pointer outline-none group`}
+            title={visuallyCollapsed ? "Search" : undefined}
+          >
+            <div
+              className={`flex items-center ${visuallyCollapsed ? "justify-center" : "gap-2.5"}`}
+            >
               <SearchIcon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
               {!visuallyCollapsed && <span className="truncate">Search</span>}
             </div>
@@ -225,8 +264,13 @@ export function Sidebar() {
               </span>
             )}
           </button>
-          <button className={`flex w-full items-center ${visuallyCollapsed ? "justify-center" : "justify-between"} gap-2.5 rounded-md ${visuallyCollapsed ? "p-2" : "px-2 py-1.5"} text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 text-[#37352f]/70 dark:text-[#9b9b9b] cursor-pointer outline-none group relative`} title={visuallyCollapsed ? "Updates" : undefined}>
-            <div className={`flex items-center ${visuallyCollapsed ? "justify-center" : "gap-2.5"}`}>
+          <button
+            className={`flex w-full items-center ${visuallyCollapsed ? "justify-center" : "justify-between"} gap-2.5 rounded-md ${visuallyCollapsed ? "p-2" : "px-2 py-1.5"} text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 text-[#37352f]/70 dark:text-[#9b9b9b] cursor-pointer outline-none group relative`}
+            title={visuallyCollapsed ? "Updates" : undefined}
+          >
+            <div
+              className={`flex items-center ${visuallyCollapsed ? "justify-center" : "gap-2.5"}`}
+            >
               <BellIcon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
               {!visuallyCollapsed && <span className="truncate">Updates</span>}
             </div>
@@ -241,7 +285,9 @@ export function Sidebar() {
         </div>
 
         {/* Main Navigation */}
-        <nav className={`flex-1 space-y-0.5 px-3 mt-2 ${visuallyCollapsed ? "flex flex-col items-center" : "ml-2"}`}>
+        <nav
+          className={`flex-1 space-y-0.5 px-3 mt-2 ${visuallyCollapsed ? "flex flex-col items-center" : "ml-2"}`}
+        >
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -261,16 +307,25 @@ export function Sidebar() {
                 <item.icon
                   className={`w-4.5 h-4.5 shrink-0 ${isActive ? "opacity-100" : "opacity-60"}`}
                 />
-                {!visuallyCollapsed && <span className="truncate">{item.name}</span>}
+                {!visuallyCollapsed && (
+                  <span className="truncate">{item.name}</span>
+                )}
               </Link>
             );
           })}
         </nav>
 
         {/* Bottom Section: User Profile & Theme Toggle */}
-        <div className={`p-3 border-t border-[#e9e9e7] dark:border-[#2d2d2d] flex flex-col ${visuallyCollapsed ? "items-center" : ""}`}>
-          <div className={`flex items-center ${visuallyCollapsed ? "justify-center flex-col gap-3" : "justify-between gap-1"} w-full`}>
-            <button className={`flex ${visuallyCollapsed ? "justify-center" : "flex-1"} items-center gap-2.5 rounded-md ${visuallyCollapsed ? "p-1" : "px-2 py-1.5"} transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer outline-none overflow-hidden`} title={visuallyCollapsed ? "User Account" : undefined}>
+        <div
+          className={`p-3 border-t border-[#e9e9e7] dark:border-[#2d2d2d] flex flex-col ${visuallyCollapsed ? "items-center" : ""}`}
+        >
+          <div
+            className={`flex items-center ${visuallyCollapsed ? "justify-center flex-col gap-3" : "justify-between gap-1"} w-full`}
+          >
+            <button
+              className={`flex ${visuallyCollapsed ? "justify-center" : "flex-1"} items-center gap-2.5 rounded-md ${visuallyCollapsed ? "p-1" : "px-2 py-1.5"} transition-colors hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer outline-none overflow-hidden`}
+              title={visuallyCollapsed ? "User Account" : undefined}
+            >
               <div className="shrink-0 h-6 w-6 rounded-full bg-black/10 dark:bg-white/10 flex items-center justify-center text-[10px] font-semibold text-[#37352f] dark:text-[#ffffff] uppercase">
                 {session?.user?.name ? session.user.name.slice(0, 2) : "US"}
               </div>
@@ -281,7 +336,9 @@ export function Sidebar() {
               )}
             </button>
 
-            <div className={`flex items-center gap-1 ${visuallyCollapsed ? "flex-col" : ""}`}>
+            <div
+              className={`flex items-center gap-1 ${visuallyCollapsed ? "flex-col" : ""}`}
+            >
               {mounted && (
                 <button
                   onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -293,10 +350,12 @@ export function Sidebar() {
                   </span>
                 </button>
               )}
-              
+
               <button
                 onClick={() => {
-                  import("next-auth/react").then(({ signOut }) => signOut({ callbackUrl: ROUTES.AUTH.LOGIN }));
+                  import("next-auth/react").then(({ signOut }) =>
+                    signOut({ callbackUrl: ROUTES.AUTH.LOGIN }),
+                  );
                 }}
                 className={`shrink-0 h-7 w-7 rounded-md flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/5 text-red-500/80 hover:text-red-600 dark:text-red-400/80 dark:hover:text-red-400 outline-none cursor-pointer`}
                 title="Sign out"

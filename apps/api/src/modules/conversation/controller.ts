@@ -8,19 +8,25 @@ import type {
 } from "@parrot/sdk";
 import type { User } from "@parrot/db/src/schema";
 import { wsGateway } from "../../ws/gateway";
+import { generateJWT } from "../../shared/utils/global";
 
 export class ConversationController {
   /**
-   * POST /api/v1/widget/messages
    * Visitor sends a message from the embeddable widget
    */
   static async sendVisitorMessage(
     req: RequestComponents,
   ): Promise<HandlerResult> {
     const data = req.body as SendVisitorMessageInput;
+    const origin = req.headers.origin as string | undefined;
+    const visitorAuth = req.meta?.visitor as { conversationId: string; visitorId: string } | undefined;
+
+    if (visitorAuth && data.conversationId && visitorAuth.conversationId !== data.conversationId) {
+      appError("Unauthorized", ERROR_CODE.NOAUTHERR, { code: "SL07" });
+    }
 
     try {
-      const result = await conversationRepository.createVisitorMessage(data);
+      const result = await conversationRepository.createVisitorMessage(data, origin, visitorAuth);
 
       // Real-time notification to online tenant agents via WS
       wsGateway.broadcastToTenant(result.tenantId, {
@@ -35,12 +41,21 @@ export class ConversationController {
         },
       });
 
+      let token;
+      if (!visitorAuth) {
+        token = generateJWT({
+          conversationId: result.conversation.id,
+          visitorId: result.visitorId!,
+        });
+      }
+
       return {
         status: 201,
         message: "Message sent successfully",
         data: {
           conversationId: result.conversation.id,
           message: result.message,
+          ...(token && { token }),
         },
       };
     } catch (error) {
@@ -52,7 +67,6 @@ export class ConversationController {
   }
 
   /**
-   * POST /api/v1/conversations/messages
    * Agent sends a message from the web dashboard
    */
   static async sendAgentMessage(
