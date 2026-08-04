@@ -44,6 +44,7 @@ export interface PropertyDto {
   logoUrl: string | null;
   timezone: string;
   settings: Record<string, any>;
+  installationSnippet?: string;
   createdAt: string;
   updatedAt: string;
 }

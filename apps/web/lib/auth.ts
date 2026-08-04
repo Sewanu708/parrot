@@ -10,7 +10,7 @@ declare module "next-auth" {
       activeTenantId: string | null;
       email: string;
       name: string;
-      tenants: Array<{ id: string; name: string; logoUrl?: string | null }>;
+      tenants: Array<{ id: string; name: string; logoUrl?: string | null; role: string }>;
       sessionToken?: string;
       defaultPropertyId?: string;
     } & DefaultSession["user"];
@@ -21,7 +21,7 @@ declare module "next-auth" {
     sessionToken: string;
     name: string;
     email: string;
-    tenants: Array<{ id: string; name: string; logoUrl?: string | null }>;
+    tenants: Array<{ id: string; name: string; logoUrl?: string | null; role: string }>;
     activeTenantId: string | null;
     defaultPropertyId?: string;
   }
@@ -33,7 +33,7 @@ declare module "next-auth/jwt" {
     sessionToken: string;
     name: string;
     email: string;
-    tenants: Array<{ id: string; name: string; logoUrl?: string | null }>;
+    tenants: Array<{ id: string; name: string; logoUrl?: string | null; role: string }>;
     activeTenantId: string | null;
     defaultPropertyId?: string;
   }

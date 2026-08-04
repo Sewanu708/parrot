@@ -1,7 +1,7 @@
 import { db } from "@parrot/db/src/config";
-import { businessHours, businessHourExceptions } from "@parrot/db/src/schema";
-import { eq } from "drizzle-orm";
-import type { UpdateBusinessHoursConfigDto } from "@parrot/sdk";
+import { businessHours, businessHourExceptions, cannedResponses, permissions, rolePermissions } from "@parrot/db/src/schema";
+import { eq, and, or, isNull } from "drizzle-orm";
+import type { UpdateBusinessHoursConfigDto, CreateCannedResponseDto, UpdateCannedResponseDto } from "@parrot/sdk";
 
 export class SettingsRepository {
   static async getBusinessHours(propertyId: string) {
@@ -67,5 +67,94 @@ export class SettingsRepository {
 
       return { hours: freshHours, exceptions: freshExceptions };
     });
+  }
+
+  static async checkPermission(roleId: string | null, permissionName: string): Promise<boolean> {
+    if (!roleId) return false;
+    
+    const [permRecord] = await db
+      .select({ id: permissions.id })
+      .from(permissions)
+      .where(eq(permissions.name, permissionName));
+      
+    if (!permRecord) return false;
+
+    const [hasAccess] = await db
+      .select()
+      .from(rolePermissions)
+      .where(
+        and(
+          eq(rolePermissions.roleId, roleId),
+          eq(rolePermissions.permissionId, permRecord.id)
+        )
+      );
+
+    return !!hasAccess;
+  }
+
+  // --- Canned Responses ---
+
+  static async getCannedResponses(tenantId: string, memberId: string) {
+    return db
+      .select()
+      .from(cannedResponses)
+      .where(
+        and(
+          eq(cannedResponses.tenantId, tenantId),
+          or(
+            isNull(cannedResponses.ownerId),
+            eq(cannedResponses.ownerId, memberId)
+          )
+        )
+      )
+      .orderBy(cannedResponses.createdAt);
+  }
+
+  static async getCannedResponseById(id: string) {
+    const results = await db
+      .select()
+      .from(cannedResponses)
+      .where(eq(cannedResponses.id, id))
+      .limit(1);
+    return results[0] || null;
+  }
+
+  static async createCannedResponse(tenantId: string, ownerId: string | null, data: CreateCannedResponseDto) {
+    const results = await db
+      .insert(cannedResponses)
+      .values({
+        tenantId,
+        ownerId,
+        visibility: data.visibility,
+        shortcut: data.shortcut,
+        content: data.content,
+      })
+      .returning();
+    return results[0];
+  }
+
+  static async updateCannedResponse(id: string, data: UpdateCannedResponseDto, ownerId?: string | null) {
+    const payload: Partial<typeof cannedResponses.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+    if (data.shortcut !== undefined) payload.shortcut = data.shortcut;
+    if (data.content !== undefined) payload.content = data.content;
+    if (data.visibility !== undefined) {
+      payload.visibility = data.visibility;
+      if (ownerId !== undefined) {
+        payload.ownerId = ownerId;
+      }
+    }
+
+    const results = await db
+      .update(cannedResponses)
+      .set(payload)
+      .where(eq(cannedResponses.id, id))
+      .returning();
+    return results[0];
+  }
+
+  static async deleteCannedResponse(id: string) {
+    await db.delete(cannedResponses).where(eq(cannedResponses.id, id));
   }
 }

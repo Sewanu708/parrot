@@ -6,6 +6,7 @@ import { tenantRepository } from "./repository";
 import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto, WidgetPropertyConfigDto } from "@parrot/sdk";
 import { AuthRepository } from "../auth/repository";
 import { Session, User } from "@parrot/db/src/schema";
+import { env } from "../../shared/env";
 
 export class TenantController {
   static async create(req: RequestComponents): Promise<HandlerResult> {
@@ -136,9 +137,18 @@ export class TenantController {
 
     const properties = await tenantRepository.getPropertiesByTenantId(tenantId);
 
+    const propertiesWithSnippet = properties.map((property) => {
+      const widgetUrl = env.FRONTEND_URL;
+      const installationSnippet = `<script \n  src="${widgetUrl}/widget.js" \n  data-property-id="${property.id}">\n</script>`;
+      return {
+        ...property,
+        installationSnippet,
+      };
+    });
+
     return {
       status: 200,
-      data: properties,
+      data: propertiesWithSnippet,
     };
   }
 

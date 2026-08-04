@@ -11,12 +11,8 @@ import {
   ContactsIcon,
   AutomationsIcon,
   SettingsIcon,
-  SelectorIcon,
-  SearchIcon,
-  BellIcon,
-  ChevronsLeftIcon,
-  SignOutIcon,
 } from "@/components/icons";
+import { Search, Bell, Menu, ChevronsLeft, LogOut, ChevronDown, Plus, ChevronsLeftIcon } from "lucide-react";
 import { useSidebar } from "./sidebar-provider";
 import { ROUTES } from "@/lib/constants";
 
@@ -162,7 +158,7 @@ export function Sidebar() {
                     {activeWorkspace?.name}
                   </span>
                 </div>
-                <SelectorIcon className="w-3.5 h-3.5 opacity-50 shrink-0" />
+                <ChevronDown className="w-3.5 h-3.5 opacity-50 shrink-0" />
               </button>
 
               {/* Dropdown Menu */}
@@ -215,9 +211,7 @@ export function Sidebar() {
                     href={ROUTES.ONBOARDING.WORKSPACE}
                     className="flex w-full items-center gap-2.5 px-2 py-1.5 rounded-sm text-sm text-[#37352f]/60 dark:text-[#9b9b9b] transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                   >
-                    <span className="text-base leading-none font-light shrink-0">
-                      +
-                    </span>
+                    <Plus className="w-4 h-4 shrink-0" />
                     <span className="truncate">New workspace</span>
                   </Link>
                 </div>
@@ -255,7 +249,7 @@ export function Sidebar() {
             <div
               className={`flex items-center ${visuallyCollapsed ? "justify-center" : "gap-2.5"}`}
             >
-              <SearchIcon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
+              <Search className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
               {!visuallyCollapsed && <span className="truncate">Search</span>}
             </div>
             {!visuallyCollapsed && (
@@ -271,7 +265,7 @@ export function Sidebar() {
             <div
               className={`flex items-center ${visuallyCollapsed ? "justify-center" : "gap-2.5"}`}
             >
-              <BellIcon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
+              <Bell className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity shrink-0" />
               {!visuallyCollapsed && <span className="truncate">Updates</span>}
             </div>
             {!visuallyCollapsed ? (
@@ -360,7 +354,7 @@ export function Sidebar() {
                 className={`shrink-0 h-7 w-7 rounded-md flex items-center justify-center transition-colors hover:bg-black/5 dark:hover:bg-white/5 text-red-500/80 hover:text-red-600 dark:text-red-400/80 dark:hover:text-red-400 outline-none cursor-pointer`}
                 title="Sign out"
               >
-                <SignOutIcon className="w-4 h-4" />
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           </div>
