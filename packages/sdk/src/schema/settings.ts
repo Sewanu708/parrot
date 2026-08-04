@@ -22,3 +22,34 @@ export const UpdateBusinessHoursConfigSchema = z.object({
 export type BusinessHourDto = z.infer<typeof BusinessHourSchema>;
 export type BusinessHourExceptionDto = z.infer<typeof BusinessHourExceptionSchema>;
 export type UpdateBusinessHoursConfigDto = z.infer<typeof UpdateBusinessHoursConfigSchema>;
+
+export type CannedResponseVisibility = "shared" | "personal";
+
+export const CannedResponseVisibilitySchema = z.enum(["shared", "personal"]);
+
+export const CannedResponseSchema = z.object({
+  id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  ownerId: z.string().uuid().nullable(),
+  visibility: CannedResponseVisibilitySchema,
+  shortcut: z.string().min(1).max(50),
+  content: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const CreateCannedResponseSchema = z.object({
+  shortcut: z.string().min(1).max(50),
+  content: z.string(),
+  visibility: CannedResponseVisibilitySchema,
+});
+
+export const UpdateCannedResponseSchema = z.object({
+  shortcut: z.string().min(1).max(50).optional(),
+  content: z.string().optional(),
+  visibility: CannedResponseVisibilitySchema.optional(),
+});
+
+export type CannedResponseDto = z.infer<typeof CannedResponseSchema>;
+export type CreateCannedResponseDto = z.infer<typeof CreateCannedResponseSchema>;
+export type UpdateCannedResponseDto = z.infer<typeof UpdateCannedResponseSchema>;

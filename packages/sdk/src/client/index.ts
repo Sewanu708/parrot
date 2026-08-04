@@ -4,6 +4,7 @@ import { AuthModule } from "./modules/auth";
 import { TenantModule } from "./modules/tenant";
 import { ConversationModule } from "./modules/conversation";
 import { WidgetModule } from "./modules/widget";
+import { SettingsModule } from "./modules/settings";
 
 export class ParrotClient {
   private http: HttpClient;
@@ -13,6 +14,7 @@ export class ParrotClient {
   public tenant: TenantModule;
   public conversation: ConversationModule;
   public widget: WidgetModule;
+  public settings: SettingsModule;
 
   constructor(options: ParrotClientOptions = {}) {
     this.http = new HttpClient(options);
@@ -22,6 +24,7 @@ export class ParrotClient {
     this.tenant = new TenantModule(this.http);
     this.conversation = new ConversationModule(this.http);
     this.widget = new WidgetModule(this.http);
+    this.settings = new SettingsModule(this.http);
   }
 
   setToken(token: string | undefined) {
@@ -39,3 +42,4 @@ export * from "./modules/auth";
 export * from "./modules/tenant";
 export * from "./modules/conversation";
 export * from "./modules/widget";
+export * from "./modules/settings";

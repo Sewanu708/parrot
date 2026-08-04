@@ -1,4 +1,5 @@
 import type { ConversationWithVisitorDto, MessageDto } from "@parrot/sdk";
+import { ChevronLeft, Paperclip } from "lucide-react";
 import { ParrotEmptyIcon } from "@/components/icons";
 import { UIMessage } from "@/hooks";
 import TextareaAutosize from "react-textarea-autosize";
@@ -45,9 +46,7 @@ export function ChatArea({
               onClick={onBack}
               className="md:hidden p-1.5 -ml-2 rounded-md hover:bg-black/5 dark:hover:bg-white/10 text-[#37352f]/60 dark:text-[#9b9b9b] cursor-pointer transition-colors outline-none"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m15 18-6-6 6-6"/>
-              </svg>
+              <ChevronLeft className="w-5 h-5" />
             </button>
           )}
           <span className="font-semibold text-sm text-[#37352f] dark:text-[#ffffff]">
@@ -151,9 +150,7 @@ export function ChatArea({
           />
           <div className="flex justify-between items-center mt-2 px-2 pb-1">
             <div className="flex items-center gap-2 text-[#37352f]/50 dark:text-[#777777]">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-              </svg>
+              <Paperclip className="w-4 h-4 cursor-pointer hover:text-[#37352f] dark:hover:text-[#ffffff] transition-colors" />
             </div>
             <button
               onClick={onSend}

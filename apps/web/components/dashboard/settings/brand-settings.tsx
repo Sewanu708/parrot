@@ -33,15 +33,18 @@ export function BrandSettings({ propertyId }: { propertyId?: string }) {
   };
 
   return (
-    <div className="bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2d2d2d] rounded-xl p-6">
-      <h2 className="text-lg font-semibold text-[#37352f] dark:text-[#ffffff] mb-4">
-        Brand Identity
-      </h2>
-      <div className="flex items-start gap-8">
-        <div className="flex-1">
-          <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b] mb-4">
-            Upload your company logo. This will be displayed on the chat widget to your visitors.
-          </p>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 py-8 border-b border-[#e9e9e7] dark:border-[#2d2d2d] last:border-0">
+      <div className="md:col-span-1 space-y-1">
+        <h2 className="text-base font-semibold text-[#37352f] dark:text-[#ffffff]">
+          Brand Identity
+        </h2>
+        <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b]">
+          Upload your company logo. This will be displayed on the chat widget to your visitors.
+        </p>
+      </div>
+      <div className="md:col-span-2">
+        <div className="flex items-start gap-8">
+          <div className="flex-1">
           
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-lg bg-gray-100 dark:bg-[#2d2d2d] flex items-center justify-center overflow-hidden border border-[#e9e9e7] dark:border-[#333333]">
@@ -69,6 +72,7 @@ export function BrandSettings({ propertyId }: { propertyId?: string }) {
               }}
             />
           </div>
+        </div>
         </div>
       </div>
     </div>

@@ -49,15 +49,17 @@ export function GeneralSettings({ property }: { property: PropertyDto }) {
   };
 
   return (
-    <div className="bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2d2d2d] rounded-xl p-6">
-      <h2 className="text-lg font-semibold text-[#37352f] dark:text-[#ffffff] mb-2">
-        General Details
-      </h2>
-      <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b] mb-6">
-        Update the core information for this property.
-      </p>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 py-8 border-b border-[#e9e9e7] dark:border-[#2d2d2d] last:border-0">
+      <div className="md:col-span-1 space-y-1">
+        <h2 className="text-base font-semibold text-[#37352f] dark:text-[#ffffff]">
+          General Details
+        </h2>
+        <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b]">
+          Update the core information for this property.
+        </p>
+      </div>
+      <div className="md:col-span-2">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 max-w-xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-[#37352f] dark:text-white uppercase tracking-wider">
@@ -109,7 +111,8 @@ export function GeneralSettings({ property }: { property: PropertyDto }) {
             {updateMutation.isPending ? "Saving..." : "Save Changes"}
           </Button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

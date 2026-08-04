@@ -46,6 +46,7 @@ export interface LoginResponse {
     id: string;
     name: string;
     logoUrl?: string | null;
+    role: string;
   }[];
   lastActiveTenantId: string | null;
 }

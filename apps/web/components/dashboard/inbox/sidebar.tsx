@@ -1,5 +1,6 @@
 import type { ConversationWithVisitorDto, PropertyDto } from "@parrot/sdk";
 import { useState, useRef, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface InboxSidebarProps {
   conversations: ConversationWithVisitorDto[];
@@ -44,9 +45,7 @@ export function InboxSidebar({ conversations, properties, activeChat, onSelectCh
           className="flex items-center gap-1.5 text-xs font-medium text-[#37352f]/70 dark:text-[#9b9b9b] hover:text-[#37352f] dark:hover:text-white transition-colors cursor-pointer"
         >
           {activePropertyLabel}
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${isFilterOpen ? "rotate-180" : ""}`}>
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
+          <ChevronDown className={`w-3 h-3 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
         </button>
 
         {isFilterOpen && (

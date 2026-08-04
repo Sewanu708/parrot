@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React from "react";
 import { useSidebar } from "./sidebar-provider";
-import { MenuIcon } from "@/components/icons";
+import { Menu } from "lucide-react";
 
 interface Breadcrumb {
   label: string;
@@ -28,7 +28,7 @@ export function Header({ breadcrumbs, action }: HeaderProps) {
             onClick={() => setIsCollapsed(false)}
             className="p-1 rounded-md text-[#37352f]/60 dark:text-[#9b9b9b] hover:bg-black/5 dark:hover:bg-white/10 transition-colors mr-2 cursor-pointer"
           >
-            <MenuIcon className="w-4 h-4" />
+            <Menu className="w-5 h-5" />
           </button>
         )}
 
