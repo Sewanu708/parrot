@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { Plus, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTable } from "@/components/parrot-ui/data-table";
+import { DataTable, ConfirmDeleteModal } from "@/components/parrot-ui";
 import notify from "@/lib/toast";
 import type { CannedResponseDto } from "@parrot/sdk";
 import { ErrorHandler } from "@/lib/utilities";
@@ -21,6 +21,7 @@ import { CannedResponseForm } from "./form";
 export function CannedResponsesSettings() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingResponse, setEditingResponse] = useState<CannedResponseDto | null>(null);
+  const [deletingResponseTarget, setDeletingResponseTarget] = useState<CannedResponseDto | null>(null);
 
   const { data: responsesResponse, isLoading } = useCannedResponses();
   const createMutation = useCreateCannedResponse();
@@ -41,20 +42,27 @@ export function CannedResponsesSettings() {
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (confirm("Are you sure you want to delete this response?")) {
-        deleteMutation.mutate(id, {
-          onSuccess: () => {
-            notify.success("Canned response deleted");
-          },
-          onError: (err: unknown) => {
-            const formattedError = ErrorHandler(err);
-            notify.error(err, formattedError);
-          },
-        });
+      const target = responses.find((r) => r.id === id);
+      if (target) {
+        setDeletingResponseTarget(target);
       }
     },
-    [deleteMutation],
+    [responses],
   );
+
+  const confirmDelete = () => {
+    if (!deletingResponseTarget) return;
+    deleteMutation.mutate(deletingResponseTarget.id, {
+      onSuccess: () => {
+        notify.success("Canned response deleted");
+        setDeletingResponseTarget(null);
+      },
+      onError: (err: unknown) => {
+        const formattedError = ErrorHandler(err);
+        notify.error(err, formattedError);
+      },
+    });
+  };
 
   const columns = useMemo(
     () => getCannedResponseColumns(handleEdit, handleDelete),
@@ -177,6 +185,17 @@ export function CannedResponsesSettings() {
           isPending={createMutation.isPending || updateMutation.isPending}
         />
       )}
+
+      <ConfirmDeleteModal
+        open={Boolean(deletingResponseTarget)}
+        onOpenChange={(open) => !open && setDeletingResponseTarget(null)}
+        title="Delete response"
+        description="Are you sure you want to delete this canned response?"
+        itemName={deletingResponseTarget ? `/${deletingResponseTarget.shortcut}` : undefined}
+        confirmText="Delete"
+        onConfirm={confirmDelete}
+        isPending={deleteMutation.isPending}
+      />
     </div>
   );
 }
