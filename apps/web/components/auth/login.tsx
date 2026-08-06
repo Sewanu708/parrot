@@ -9,6 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormData } from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
 import notify from "@/lib/toast";
+import { ErrorHandler } from "@/lib/utilities";
 import AuthLeftPanel from "@/components/auth/auth-panel";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -98,8 +99,9 @@ export default function LoginPage() {
         description: "Check your inbox for the link.",
       });
     } catch (err) {
-      setError("Failed to resend. Please try again.");
-      notify.error(err, "Failed to resend verification email");
+      const formattedError = ErrorHandler(err);
+      setError(formattedError);
+      notify.error(err, formattedError);
     } finally {
       setResending(false);
     }

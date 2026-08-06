@@ -2,18 +2,15 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { parrotClient } from "@/lib/parrot";
 import notify from "@/lib/toast";
-import { PropertyDto, UpdatePropertyDto } from "@parrot/sdk";
+import { PropertyDto } from "@parrot/sdk";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GeneralSettingsFormData, GeneralSettingsSchema } from "@/lib/schema";
-
+import { useUpdateProperty } from "@/hooks/use-settings";
+import { ErrorHandler } from "@/lib/utilities";
 
 export function GeneralSettings({ property }: { property: PropertyDto }) {
-  const queryClient = useQueryClient();
-  
   const {
     register,
     handleSubmit,
@@ -28,24 +25,29 @@ export function GeneralSettings({ property }: { property: PropertyDto }) {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: (data: UpdatePropertyDto) => parrotClient.tenant.updateProperty(property.id, data),
-    onSuccess: (_, variables) => {
-      notify.success("Property details updated");
-      queryClient.invalidateQueries({ queryKey: ["properties"] });
-      reset(variables);
-    },
-    onError: (err: any) => {
-      notify.error(err.message || "Failed to update property");
-    },
-  });
+  const updateMutation = useUpdateProperty();
 
   const onSubmit = (data: GeneralSettingsFormData) => {
-    updateMutation.mutate({
-      name: data.name,
-      domain: data.domain || undefined,
-      supportEmail: data.supportEmail || undefined,
-    });
+    updateMutation.mutate(
+      {
+        propertyId: property.id,
+        data: {
+          name: data.name,
+          domain: data.domain || undefined,
+          supportEmail: data.supportEmail || undefined,
+        },
+      },
+      {
+        onSuccess: () => {
+          notify.success("Property details updated");
+          reset(data);
+        },
+        onError: (err: unknown) => {
+          const formattedError = ErrorHandler(err);
+          notify.error(err, formattedError);
+        },
+      },
+    );
   };
 
   return (

@@ -75,9 +75,10 @@ export const authOptions: AuthOptions = {
             tenants,
             activeTenantId,
           };
-        } catch (err: any) {
+        } catch (err: unknown) {
           // Surface the API error message to the client
-          throw new Error(err?.message ?? "Authentication failed.");
+          const message = err instanceof Error ? err.message : "Authentication failed.";
+          throw new Error(message);
         }
       },
     }),

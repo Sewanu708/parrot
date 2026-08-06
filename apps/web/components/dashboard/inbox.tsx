@@ -28,7 +28,7 @@ export default function InboxPage() {
   const properties = propertiesResponse?.data || [];
 
   // Fetch conversations
-  const { data: conversationsResponse } = useQuery({
+  const { data: conversationsResponse, isLoading: isLoadingConversations } = useQuery({
     queryKey: ["conversations"],
     queryFn: () => parrotClient.conversation.getConversations(),
   });
@@ -124,6 +124,7 @@ export default function InboxPage() {
           properties={properties}
           activeChat={activeChat} 
           onSelectChat={setActiveChat} 
+          isLoading={isLoadingConversations}
           className={`${activeChat ? "hidden md:flex" : "flex w-full"} md:w-[320px]`}
         />
 

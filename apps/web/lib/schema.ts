@@ -42,8 +42,6 @@ export const createWorkspaceSchema = z.object({
 
 export type CreateWorkspaceFormData = z.infer<typeof createWorkspaceSchema>;
 
-
-
 export const GeneralSettingsSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
   domain: z.string().max(255).optional().or(z.literal("")),
@@ -51,3 +49,15 @@ export const GeneralSettingsSchema = z.object({
 });
 
 export type GeneralSettingsFormData = z.infer<typeof GeneralSettingsSchema>;
+
+export const CannedResponseFormSchema = z.object({
+  shortcut: z
+    .string()
+    .min(1, "Shortcut is required")
+    .max(50, "Shortcut must be 50 characters or less")
+    .regex(/^[a-zA-Z0-9_-]+$/, "Only letters, numbers, hyphens, and underscores allowed"),
+  content: z.string().min(1, "Response content is required"),
+  visibility: z.enum(["shared", "personal"]),
+});
+
+export type CannedResponseFormData = z.infer<typeof CannedResponseFormSchema>;

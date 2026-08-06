@@ -9,6 +9,7 @@ import {
 } from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
 import notify from "@/lib/toast";
+import { ErrorHandler } from "@/lib/utils";
 import AuthLeftPanel from "@/components/auth/auth-panel";
 import { useCreateTenant } from "@/hooks";
 import { useState } from "react";
@@ -83,7 +84,8 @@ export default function CreateWorkspacePage() {
           }
         },
         onError: (err) => {
-          notify.error(err, "Failed to create workspace");
+          const formattedError = ErrorHandler(err);
+          notify.error(err, formattedError);
         },
       },
     );
@@ -290,7 +292,7 @@ export default function CreateWorkspacePage() {
                   ) : (
                     <UploadButton
                       endpoint="imageUploader"
-                      onClientUploadComplete={(res: any) => {
+                      onClientUploadComplete={(res: Array<{ url: string }>) => {
                         console.log(`This is uploader complete ${res}`);
 
                         setLogoUrl(res[0].url);

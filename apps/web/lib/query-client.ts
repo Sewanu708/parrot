@@ -1,7 +1,7 @@
 'use client'
 import { QueryClient } from "@tanstack/react-query";
 import { signOut } from "next-auth/react";
-import { isParrotErrorInstance } from "./utils";
+import { isParrotErrorInstance } from "./utilities";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
