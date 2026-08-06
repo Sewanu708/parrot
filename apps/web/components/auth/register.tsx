@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, type SignupFormData } from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
 import AuthLeftPanel from "@/components/auth/auth-panel";
-import { ErrorHandler } from "@/lib/utils";
+import { ErrorHandler } from "@/lib/utilities";
 import notify from "@/lib/toast";
 
 export default function SignupPage() {

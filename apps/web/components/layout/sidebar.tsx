@@ -164,7 +164,7 @@ export function Sidebar() {
               {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <div className="absolute top-full mt-1 left-0 w-full rounded-md border border-[#e9e9e7] dark:border-[#333333] bg-white dark:bg-[#252525] p-1 shadow-lg z-50">
-                  {workspaces?.map((workspace: any) => (
+                  {workspaces?.map((workspace: { id: string; name: string }) => (
                     <button
                       key={workspace.id}
                       onClick={async () => {

@@ -5,9 +5,11 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { parrotClient } from "@/lib/parrot";
 import { useSession } from "next-auth/react";
-import { InboxSidebar } from "./inbox/sidebar";
-import { ChatArea } from "./inbox/chat-area";
+import { InboxSidebar } from "./sidebar";
+import { ChatArea } from "./chat-area";
 import { useSendMessage } from "@/hooks";
+import notify from "@/lib/toast";
+import { isParrotErrorInstance } from "@/lib/utilities";
 
 export default function InboxPage() {
   const [activeChat, setActiveChat] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export default function InboxPage() {
   const properties = propertiesResponse?.data || [];
 
   // Fetch conversations
-  const { data: conversationsResponse } = useQuery({
+  const { data: conversationsResponse, isLoading: isLoadingConversations } = useQuery({
     queryKey: ["conversations"],
     queryFn: () => parrotClient.conversation.getConversations(),
   });
@@ -43,12 +45,21 @@ export default function InboxPage() {
   }, [conversations, activeChat]);
 
   // Fetch messages for active chat
-  const { data: messagesResponse } = useQuery({
+  const { data: messagesResponse, error: messagesError } = useQuery({
     queryKey: ["messages", activeChat],
     queryFn: () => parrotClient.conversation.getMessages(activeChat!),
     enabled: !!activeChat,
   });
   const messages = messagesResponse?.data || [];
+
+  useEffect(() => {
+    if (messagesError) {
+      if (isParrotErrorInstance(messagesError) && messagesError.publicCode === "SL13") {
+        notify.error("Conversation not found. Returning to inbox.");
+        setActiveChat(null);
+      }
+    }
+  }, [messagesError]);
 
   // Listen for typing events
   useEffect(() => {
@@ -124,6 +135,7 @@ export default function InboxPage() {
           properties={properties}
           activeChat={activeChat} 
           onSelectChat={setActiveChat} 
+          isLoading={isLoadingConversations}
           className={`${activeChat ? "hidden md:flex" : "flex w-full"} md:w-[320px]`}
         />
 

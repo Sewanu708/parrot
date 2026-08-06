@@ -1,7 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { parrotClient } from "@/lib/parrot";
-import type { UpdateBusinessHoursConfigDto } from "@parrot/sdk";
+import type { 
+  UpdateBusinessHoursConfigDto, 
+  CreateCannedResponseDto, 
+  UpdateCannedResponseDto,
+  UpdatePropertyDto 
+} from "@parrot/sdk";
 
+// Business Hours Hooks
 export function useBusinessHours(propertyId: string | undefined) {
   return useQuery({
     queryKey: ["business-hours", propertyId],
@@ -17,8 +23,63 @@ export function useUpdateBusinessHours() {
     mutationFn: ({ propertyId, data }: { propertyId: string; data: UpdateBusinessHoursConfigDto }) => 
       parrotClient.settings.updateBusinessHours(propertyId, data),
     onSuccess: (_, { propertyId }) => {
-      // Invalidate the cache so it refetches the fresh data
       queryClient.invalidateQueries({ queryKey: ["business-hours", propertyId] });
+    },
+  });
+}
+
+// Canned Responses Hooks
+export function useCannedResponses() {
+  return useQuery({
+    queryKey: ["canned-responses"],
+    queryFn: () => parrotClient.settings.getCannedResponses(),
+  });
+}
+
+export function useCreateCannedResponse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateCannedResponseDto) =>
+      parrotClient.settings.createCannedResponse(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["canned-responses"] });
+    },
+  });
+}
+
+export function useUpdateCannedResponse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCannedResponseDto }) =>
+      parrotClient.settings.updateCannedResponse(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["canned-responses"] });
+    },
+  });
+}
+
+export function useDeleteCannedResponse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => parrotClient.settings.deleteCannedResponse(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["canned-responses"] });
+    },
+  });
+}
+
+// Property Settings Hooks
+export function useUpdateProperty() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ propertyId, data }: { propertyId: string; data: UpdatePropertyDto }) =>
+      parrotClient.tenant.updateProperty(propertyId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["properties"] });
     },
   });
 }

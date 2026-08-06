@@ -1,77 +1,12 @@
-export const ERROR_CODE = {
-  AUTHERR: 'AUTHORIZATION_ERROR',
-  NOAUTHERR: 'MISSING_AUTHORIZATION',
-  INVLDAUTHTOKEN: 'INVALID_AUTH_TOKEN',
-  INACTIVEACCT: 'INACTIVE_ACCOUNT',
-  EXPIREDTOKEN: 'EXPIRED_TOKEN',
-  INVLDREQ: 'INVALID_REQUEST',
-  PERMERR: 'PERMISSION_ERROR',
-  LIMITERR: 'LIMIT_ERROR',
-  FEEERR: 'FEE_ERROR',
-  NOTFOUND: 'RESOURCE_NOT_FOUND',
-  APPERR: 'APPLICATION_ERROR',
-  HTTPREQERR: 'INTERNAL_REQ_ERROR',
-  DUPLRCRD: 'DUPLICATE_RECORD',
-  VALIDATIONERR: 'VALIDATION_ERROR',
-  INVLDDATA: 'INVALID_REQUEST_DATA',
-  RTLIMERR: 'RATE_LIMIT_ERROR',
-};
-
-export const ERROR_STATUS_CODE_MAPPING = {
-  AUTHORIZATION_ERROR: 401,
-  MISSING_AUTHORIZATION: 401,
-  INVALID_AUTH_TOKEN: 401,
-  INACTIVE_ACCOUNT: 401,
-  EXPIRED_TOKEN: 401,
-  PERMISSION_ERROR: 401,
-  INVALID_REQUEST: 400,
-  LIMIT_ERROR: 403,
-  FEE_ERROR: 403,
-  RESOURCE_NOT_FOUND: 404,
-  DUPLICATE_RECORD: 409,
-  APPLICATION_ERROR: 500,
-  RATE_LIMIT_ERROR: 429,
-};
-
-
-export const HTTPStatusCode = {
-  /** HTTP 200 OK */
-  /** @type HttpStatusCodeNumber */
-  HTTP_200_OK: 200,
-  /** HTTP 201 Created */
-  /** @type HttpStatusCodeNumber */
-  HTTP_201_CREATED: 201,
-  /** HTTP 204 No Content */
-  /** @type HttpStatusCodeNumber */
-  HTTP_204_NO_CONTENT: 204,
-  /** HTTP 400 Bad Request */
-  /** @type HttpStatusCodeNumber */
-  HTTP_400_BAD_REQUEST: 400,
-  /** HTTP 401 Unauthorized */
-  /** @type HttpStatusCodeNumber */
-  HTTP_401_UNAUTHORIZED: 401,
-  /** HTTP 403 Forbidden */
-  /** @type HttpStatusCodeNumber */
-  HTTP_403_FORBIDDEN: 403,
-  /** HTTP 500 Server Error */
-  /** @type HttpStatusCodeNumber */
-  HTTP_500_SERVER_ERROR: 500,
-};
-
-export const PERMISSIONS = {
-  CONVERSATIONS_READ: "conversations:read",
-  CONVERSATIONS_WRITE: "conversations:write",
-  CONVERSATIONS_ASSIGN: "conversations:assign",
-  TICKETS_READ: "tickets:read",
-  TICKETS_WRITE: "tickets:write",
-  KB_READ: "kb:read",
-  KB_WRITE: "kb:write",
-  KB_PUBLISH: "kb:publish",
-  CANNED_RESPONSES_MANAGE: "canned_responses:manage",
-  SETTINGS_MANAGE: "settings:manage",
-  TEAM_READ: "team:read",
-  TEAM_WRITE: "team:write",
-  ROLES_MANAGE: "roles:manage",
-} as const;
-
-export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+export {
+  ERROR_CODE,
+  ERROR_STATUS_CODE_MAPPING,
+  HTTPStatusCode,
+  PERMISSIONS,
+  type PermissionKey,
+  PUBLIC_ERROR_CODE,
+  type PublicErrorCode,
+  AUTH_LOST_CODES,
+  WORKSPACE_LOST_CODES,
+  RESOURCE_LOST_CODES,
+} from "@parrot/sdk";

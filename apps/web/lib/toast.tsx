@@ -1,6 +1,6 @@
 import React from "react";
 import { toast as sonnerToast } from "sonner";
-import { ErrorHandler, getParrotPublicCode } from "./utils";
+import { ErrorHandler, getParrotPublicCode } from "./utilities";
 
 export interface ToastOptions {
   description?: string;

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import { SettingsContent } from "@/components/dashboard/settings";
+import { SETTINGS_NAV_ITEMS } from "@/lib/constants";
 
 export async function generateMetadata({
   searchParams,
@@ -8,9 +9,16 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const params = await searchParams;
   const tab = typeof params?.tab === "string" ? params.tab : "workspace";
+
+  const matchedName = SETTINGS_NAV_ITEMS.find((element) => element.tab === tab)?.name;
+  if (matchedName) {
+    return {
+      title: `${matchedName} - Settings`,
+    };
+  }
   const title = tab.charAt(0).toUpperCase() + tab.slice(1);
   return {
-    title: `${title} Settings`,
+    title: `${title} - Settings`,
   };
 }
 

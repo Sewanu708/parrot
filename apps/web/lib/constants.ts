@@ -31,3 +31,9 @@ export const THEME = {
     BRAND_DEFAULT: "#4f46e5",
   },
 } as const;
+
+export const SETTINGS_NAV_ITEMS = [
+  { name: "Workspace", tab: "workspace" },
+  { name: "Properties", tab: "properties" },
+  { name: "Canned Responses", tab: "canned_responses" },
+] as const;
