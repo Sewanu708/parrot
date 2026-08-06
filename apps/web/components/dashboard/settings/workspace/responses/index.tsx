@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Plus, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "@/components/parrot-ui/data-table";
 import notify from "@/lib/toast";
 import type { CannedResponseDto } from "@parrot/sdk";
 import { useSession } from "next-auth/react";
@@ -14,9 +15,9 @@ import {
   useUpdateCannedResponse,
   useDeleteCannedResponse,
 } from "@/hooks/use-settings";
-import { CannedResponseCard } from "./canned-response-card";
-import { CannedResponseForm } from "./canned-response-form";
 import type { CannedResponseFormData } from "@/lib/schema";
+import { getCannedResponseColumns } from "./column";
+import { CannedResponseForm } from "./form";
 
 export function CannedResponsesSettings() {
   const { data: session } = useSession();
@@ -43,24 +44,32 @@ export function CannedResponsesSettings() {
     setEditingResponse(null);
   };
 
-  const handleEdit = (response: CannedResponseDto) => {
+  const handleEdit = useCallback((response: CannedResponseDto) => {
     setEditingResponse(response);
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const handleDelete = (id: string) => {
-    if (confirm("Are you sure you want to delete this response?")) {
-      deleteMutation.mutate(id, {
-        onSuccess: () => {
-          notify.success("Canned response deleted");
-        },
-        onError: (err: unknown) => {
-          const formattedError = ErrorHandler(err);
-          notify.error(err, formattedError);
-        },
-      });
-    }
-  };
+  const handleDelete = useCallback(
+    (id: string) => {
+      if (confirm("Are you sure you want to delete this response?")) {
+        deleteMutation.mutate(id, {
+          onSuccess: () => {
+            notify.success("Canned response deleted");
+          },
+          onError: (err: unknown) => {
+            const formattedError = ErrorHandler(err);
+            notify.error(err, formattedError);
+          },
+        });
+      }
+    },
+    [deleteMutation],
+  );
+
+  const columns = useMemo(
+    () => getCannedResponseColumns(handleEdit, handleDelete),
+    [handleEdit, handleDelete],
+  );
 
   const handleSubmit = (data: CannedResponseFormData) => {
     if (editingResponse) {
@@ -112,21 +121,11 @@ export function CannedResponsesSettings() {
           </div>
           <Skeleton className="h-9 w-32" />
         </div>
-        <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-[#191919] border border-[#e9e9e7] dark:border-[#2d2d2d] rounded-xl p-5 space-y-3"
-            >
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-5 w-20 rounded-md" />
-                <Skeleton className="h-4 w-16" />
-              </div>
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-3 w-32 mt-2" />
-            </div>
-          ))}
+        <div className="rounded-xl border border-[#e9e9e7] dark:border-[#2d2d2d] bg-white dark:bg-[#191919] p-4 space-y-3">
+          <Skeleton className="h-6 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
         </div>
       </div>
     );
@@ -156,14 +155,14 @@ export function CannedResponsesSettings() {
           </div>
 
           {responses.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center p-12 bg-neutral-50/50 dark:bg-white/[0.02] border border-dashed border-neutral-200 dark:border-white/10 rounded-xl">
+            <div className="flex flex-col items-center justify-center text-center p-12 bg-neutral-50/50 dark:bg-white/2 border border-dashed border-neutral-200 dark:border-white/10 rounded-xl">
               <div className="w-12 h-12 bg-white dark:bg-[#252525] rounded-xl flex items-center justify-center border border-neutral-100 dark:border-white/5 mb-4 shadow-sm">
                 <MessageSquareText className="w-6 h-6 text-neutral-400" />
               </div>
               <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
                 No responses yet
               </h3>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-[250px] mb-4">
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-62.5 mb-4">
                 Create canned responses to answer common questions faster.
               </p>
               <Button
@@ -175,17 +174,9 @@ export function CannedResponsesSettings() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4">
-              {responses.map((response) => (
-                <CannedResponseCard
-                  key={response.id}
-                  response={response}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              ))}
-            </div>
+            <DataTable columns={columns} data={responses} />
           )}
+          
         </>
       ) : (
         <CannedResponseForm

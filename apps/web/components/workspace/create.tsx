@@ -9,7 +9,7 @@ import {
 } from "@/lib/schema";
 import { parrotClient } from "@/lib/parrot";
 import notify from "@/lib/toast";
-import { ErrorHandler } from "@/lib/utils";
+import { ErrorHandler } from "@/lib/utilities";
 import AuthLeftPanel from "@/components/auth/auth-panel";
 import { useCreateTenant } from "@/hooks";
 import { useState } from "react";

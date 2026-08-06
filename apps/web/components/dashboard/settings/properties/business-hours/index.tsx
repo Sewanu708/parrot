@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import notify from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBusinessHours, useUpdateBusinessHours } from "@/hooks/use-settings";
+import {
+  useBusinessHours,
+  useUpdateBusinessHours,
+} from "@/hooks/use-settings";
 import { ErrorHandler } from "@/lib/utilities";
-import { BusinessHourRow, BusinessHourConfig } from "./business-hour-row";
+import { BusinessHourRow, BusinessHourConfig } from "./row";
 import {
   BusinessHourExceptions,
   BusinessHourExceptionConfig,
-} from "./business-hour-exceptions";
+} from "./exceptions";
 
 const DAYS = [
   { label: "Monday", val: 1 },
@@ -22,75 +25,36 @@ const DAYS = [
   { label: "Sunday", val: 0 },
 ];
 
-function normalizeHours(hours: BusinessHourConfig[]) {
-  return [...hours]
-    .sort((a, b) => a.dayOfWeek - b.dayOfWeek)
-    .map((h) => `${h.dayOfWeek}:${h.startTime}-${h.endTime}`)
-    .join("|");
-}
-
-function normalizeExceptions(exceptions: BusinessHourExceptionConfig[]) {
-  return [...exceptions]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map((e) => `${e.date}:${e.isClosed}:${e.reason ?? ""}`)
-    .join("|");
-}
-
-export function BusinessHoursSettings({ propertyId }: { propertyId: string }) {
+export function BusinessHoursSettings({
+  propertyId,
+}: {
+  propertyId: string;
+}) {
   const [hours, setHours] = useState<BusinessHourConfig[]>([]);
-  const [exceptions, setExceptions] = useState<BusinessHourExceptionConfig[]>(
-    [],
-  );
-
-  // Snapshot of the last known-saved server state, used to detect
-  // unsaved edits and to support "Discard changes."
-  const [savedHours, setSavedHours] = useState<BusinessHourConfig[]>([]);
-  const [savedExceptions, setSavedExceptions] = useState<
-    BusinessHourExceptionConfig[]
-  >([]);
+  const [exceptions, setExceptions] = useState<BusinessHourExceptionConfig[]>([]);
 
   const { data, isLoading } = useBusinessHours(propertyId);
   const updateMutation = useUpdateBusinessHours();
 
   useEffect(() => {
     if (data?.data) {
-      const loadedHours = data.data.hours || [];
-      const loadedExceptions = data.data.exceptions || [];
-      setHours(loadedHours);
-      setExceptions(loadedExceptions);
-      setSavedHours(loadedHours);
-      setSavedExceptions(loadedExceptions);
+      setHours(data.data.hours || []);
+      setExceptions(data.data.exceptions || []);
     }
   }, [data]);
-
-  const isDirty = useMemo(() => {
-    return (
-      normalizeHours(hours) !== normalizeHours(savedHours) ||
-      normalizeExceptions(exceptions) !== normalizeExceptions(savedExceptions)
-    );
-  }, [hours, exceptions, savedHours, savedExceptions]);
 
   const handleSave = () => {
     updateMutation.mutate(
       { propertyId, data: { hours, exceptions } },
       {
-        onSuccess: () => {
-          notify.success("Business hours & exceptions updated successfully!");
-          // Move the "saved" snapshot forward now that the server has it.
-          setSavedHours(hours);
-          setSavedExceptions(exceptions);
-        },
+        onSuccess: () =>
+          notify.success("Business hours & exceptions updated successfully!"),
         onError: (err: unknown) => {
           const formattedError = ErrorHandler(err);
           notify.error(err, formattedError);
         },
       },
     );
-  };
-
-  const handleDiscard = () => {
-    setHours(savedHours);
-    setExceptions(savedExceptions);
   };
 
   const toggleDay = (dayIndex: number) => {
@@ -181,25 +145,10 @@ export function BusinessHoursSettings({ propertyId }: { propertyId: string }) {
               onRemoveException={handleRemoveException}
             />
 
-            <div className="mt-4 flex items-center justify-end gap-3">
-              {isDirty && !updateMutation.isPending && (
-                <>
-                  <span className="text-xs text-amber-600 dark:text-amber-500">
-                    Unsaved changes
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={handleDiscard}
-                    className="cursor-pointer"
-                  >
-                    Discard
-                  </Button>
-                </>
-              )}
+            <div className="mt-4 flex justify-end">
               <Button
                 onClick={handleSave}
-                disabled={updateMutation.isPending || !isDirty}
+                disabled={updateMutation.isPending}
                 className="cursor-pointer"
               >
                 {updateMutation.isPending ? "Saving..." : "Save Changes"}

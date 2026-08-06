@@ -2,19 +2,20 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { parrotClient } from "@/lib/parrot";
-import { useSession } from "next-auth/react";
-import { useState } from "react";
-import { BrandSettings } from "@/components/dashboard/settings/brand-settings";
-import { GeneralSettings } from "@/components/dashboard/settings/general-settings";
-import { BusinessHoursSettings } from "@/components/dashboard/settings/business-hours";
+import { useState, useEffect } from "react";
+import notify from "@/lib/toast";
+import { BrandSettings } from "./brand-settings";
+import { GeneralSettings } from "./general-settings";
+import { BusinessHoursSettings } from "./business-hours";
 import { Copy, Check, Plus, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PropertyDto } from "@parrot/sdk";
+import { useSessionUser } from "@/hooks";
 
 export function PropertiesSettings() {
-  const { data: session } = useSession();
-  const activeTenantId = session?.user?.activeTenantId;
+  const user = useSessionUser();
+  const activeTenantId = user?.activeTenantId;
 
   const [activePropertyId, setActivePropertyId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -35,6 +36,13 @@ export function PropertiesSettings() {
   };
 
   const activeProperty = properties.find((p) => p.id === activePropertyId);
+
+  useEffect(() => {
+    if (activePropertyId && properties.length > 0 && !activeProperty) {
+      notify.error("Selected property was not found.");
+      setActivePropertyId(null);
+    }
+  }, [activePropertyId, properties, activeProperty]);
 
   return (
     <>

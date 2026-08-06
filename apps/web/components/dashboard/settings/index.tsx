@@ -1,8 +1,8 @@
 "use client";
 
-import { WorkspaceSettings } from "@/components/dashboard/settings/workspace-settings";
-import { PropertiesSettings } from "@/components/dashboard/settings/properties-settings";
-import { CannedResponsesSettings } from "@/components/dashboard/settings/canned-responses";
+import { WorkspaceSettings } from "@/components/dashboard/settings/workspace";
+import { PropertiesSettings } from "@/components/dashboard/settings/properties";
+import { CannedResponsesSettings } from "@/components/dashboard/settings/workspace/responses";
 
 export function SettingsContent({ activeTab }: { activeTab: string }) {
   return (

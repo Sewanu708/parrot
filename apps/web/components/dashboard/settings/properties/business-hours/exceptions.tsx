@@ -9,7 +9,7 @@ export interface BusinessHourExceptionConfig {
   id?: string;
   date: string; // YYYY-MM-DD
   isClosed: boolean;
-  reason?: string|null;
+  reason?: string | null;
 }
 
 interface BusinessHourExceptionsProps {
@@ -79,7 +79,7 @@ export function BusinessHourExceptions({
 
       {/* Exception List */}
       {exceptions.length > 0 ? (
-        <div className="divide-y divide-[#e9e9e7]/50 dark:divide-[#2d2d2d]/50 border border-[#e9e9e7] dark:border-[#2d2d2d] rounded-lg bg-neutral-50/50 dark:bg-white/2">
+        <div className="divide-y divide-[#e9e9e7]/50 dark:divide-[#2d2d2d]/50 border border-[#e9e9e7] dark:border-[#2d2d2d] rounded-lg bg-neutral-50/50 dark:bg-white/[0.02]">
           {exceptions.map((ex) => (
             <div
               key={ex.date}

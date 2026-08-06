@@ -26,3 +26,6 @@ export const PUBLIC_ERROR_CODE = {
 
 export type PublicErrorCode = keyof typeof PUBLIC_ERROR_CODE;
 
+export const AUTH_LOST_CODES: readonly PublicErrorCode[] = ["SL07", "SL08"];
+export const WORKSPACE_LOST_CODES: readonly PublicErrorCode[] = ["SL09", "SL10", "SL11"];
+export const RESOURCE_LOST_CODES: readonly PublicErrorCode[] = ["SL12", "SL13"];

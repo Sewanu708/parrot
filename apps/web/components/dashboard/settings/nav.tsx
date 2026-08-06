@@ -2,13 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ROUTES } from "@/lib/constants";
-
-const navItems = [
-  { name: "Workspace", tab: "workspace" },
-  { name: "Properties", tab: "properties" },
-  { name: "Canned Responses", tab: "canned_responses" },
-];
+import { SETTINGS_NAV_ITEMS } from "@/lib/constants";
 
 export function SettingsNav() {
   const searchParams = useSearchParams();
@@ -20,7 +14,7 @@ export function SettingsNav() {
         Settings
       </h2>
       <div className="flex md:flex-col gap-1">
-        {navItems.map((item) => {
+        {SETTINGS_NAV_ITEMS.map((item) => {
           const isActive = currentTab === item.tab;
           return (
             <Link
