@@ -27,6 +27,7 @@ export class TenantController {
         message: "Tenant created successfully",
         data: {
           ...tenant,
+          role: "Owner",
           defaultPropertyId: defaultProperty.id,
         },
       };

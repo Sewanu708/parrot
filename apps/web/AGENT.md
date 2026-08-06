@@ -65,6 +65,8 @@ This document outlines the architectural conventions, coding rules, component de
 - **Focus Rings**: Avoid default browser outline rings or hardcoded blue border overrides on feature components. Standardize focus ring styling on application inputs.
 - **Skeleton Loaders**: Use `<Skeleton />` from `@/components/ui/skeleton` for query loading states instead of raw spinner text or generic loaders.
 
+Buttons -> should always have cursor-pointer
+
 ---
 
 ## 6. Constants & Navigation

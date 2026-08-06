@@ -79,6 +79,9 @@ export class TenantRepository {
     userId: string,
     tx: PgAsyncTransaction<any, any>,
   ) {
+    // 1. Guarantee global permissions exist in DB before mapping
+    await TenantRepository.seedPermissions(tx);
+
     // 2. Create default roles (Owner, Admin, Agent)
     const [ownerRole, adminRole, agentRole] = await tx
       .insert(roles)
@@ -195,7 +198,8 @@ export class TenantRepository {
       .orderBy(properties.createdAt);
   }
 
-  static async seedPermissions() {
+  static async seedPermissions(tx?: PgAsyncTransaction<any, any>) {
+    const executor = tx || db;
     const permissionsDef = [
       {
         key: PERMISSIONS.CONVERSATIONS_READ,
@@ -268,7 +272,7 @@ export class TenantRepository {
       },
     ];
     for (const element of permissionsDef) {
-      await db
+      await executor
         .insert(permissions)
         .values({
           name: element.key,

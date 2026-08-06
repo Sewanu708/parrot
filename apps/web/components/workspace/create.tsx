@@ -72,7 +72,12 @@ export default function CreateWorkspacePage() {
               activeTenantId: responseData.id,
               tenants: [
                 ...(sessionData?.user.tenants ?? []),
-                { id: responseData.id, name: responseData.name },
+                {
+                  id: responseData.id,
+                  name: responseData.name,
+                  logoUrl: responseData.logoUrl ?? null,
+                  role: responseData.role || "Owner",
+                },
               ],
             },
           });
