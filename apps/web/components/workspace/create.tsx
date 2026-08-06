@@ -76,7 +76,7 @@ export default function CreateWorkspacePage() {
                   id: responseData.id,
                   name: responseData.name,
                   logoUrl: responseData.logoUrl ?? null,
-                  role: responseData.role || "Owner",
+                  role: responseData.role ?? "",
                 },
               ],
             },

@@ -15,7 +15,6 @@ interface CannedResponseFormProps {
     content: string;
     visibility: "shared" | "personal";
   };
-  canManageShared?: boolean;
   editingId?: string | null;
   onSubmit?: (data: CannedResponseFormData) => void;
   onCancel?: () => void;
@@ -24,7 +23,6 @@ interface CannedResponseFormProps {
 
 export function CannedResponseForm({
   initialValues,
-  canManageShared = false,
   editingId = null,
   onSubmit = () => {},
   onCancel = () => {},
@@ -147,8 +145,7 @@ export function CannedResponseForm({
 
             <label
               className={`
-                relative flex rounded-lg border p-4 shadow-sm focus:outline-none 
-                ${!canManageShared ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                relative flex rounded-lg border p-4 shadow-sm focus:outline-none cursor-pointer
                 ${
                   visibility === "shared"
                     ? "border-neutral-900 dark:border-white ring-1 ring-neutral-900 dark:ring-white bg-neutral-50 dark:bg-neutral-900/30"
@@ -160,9 +157,8 @@ export function CannedResponseForm({
                 type="radio"
                 value="shared"
                 className="sr-only"
-                disabled={!canManageShared}
                 checked={visibility === "shared"}
-                onChange={() => canManageShared && setValue("visibility", "shared")}
+                onChange={() => setValue("visibility", "shared")}
               />
               <div className="flex w-full items-center justify-between">
                 <div className="flex items-center">
@@ -172,7 +168,6 @@ export function CannedResponseForm({
                     </div>
                     <div className="text-neutral-500 dark:text-neutral-400 mt-1 text-xs">
                       Available to everyone in the workspace.
-                      {!canManageShared && " (Requires admin role)"}
                     </div>
                   </div>
                 </div>

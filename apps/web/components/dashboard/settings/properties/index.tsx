@@ -143,7 +143,7 @@ export function PropertiesSettings() {
             variant="ghost"
             size="sm"
             onClick={() => setActivePropertyId(null)}
-            className="w-fit pl-0 gap-2 text-[#37352f]/60 dark:text-[#9b9b9b] hover:text-[#37352f] dark:hover:text-white hover:bg-transparent"
+            className="w-fit pl-0 gap-2 cursor-pointer text-[#37352f]/60 dark:text-[#9b9b9b] hover:text-[#37352f] dark:hover:text-white hover:bg-transparent"
           >
             <ChevronLeft className="w-4 h-4" />
             Back to Properties

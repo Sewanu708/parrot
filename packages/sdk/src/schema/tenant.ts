@@ -18,9 +18,11 @@ export type UpdateTenantDto = z.infer<typeof UpdateTenantSchema>;
 export interface TenantDto {
   id: string;
   name: string;
+  logoUrl?: string | null;
+  role?: string;
+  defaultPropertyId?: string;
   createdAt: string;
   updatedAt: string;
-  defaultPropertyId?: string;
 }
 
 export const UpdatePropertySchema = z.object({

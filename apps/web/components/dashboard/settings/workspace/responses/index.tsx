@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/parrot-ui/data-table";
 import notify from "@/lib/toast";
 import type { CannedResponseDto } from "@parrot/sdk";
-import { useSession } from "next-auth/react";
 import { ErrorHandler } from "@/lib/utilities";
 import {
   useCannedResponses,
@@ -20,15 +19,6 @@ import { getCannedResponseColumns } from "./column";
 import { CannedResponseForm } from "./form";
 
 export function CannedResponsesSettings() {
-  const { data: session } = useSession();
-
-  const activeTenantId = session?.user?.activeTenantId;
-  const activeTenant = session?.user?.tenants?.find(
-    (t: { id: string; role?: string }) => t.id === activeTenantId,
-  );
-  const userRole = activeTenant?.role || "member";
-  const canManageShared = ["owner", "admin"].includes(userRole.toLowerCase());
-
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingResponse, setEditingResponse] = useState<CannedResponseDto | null>(null);
 
@@ -181,7 +171,6 @@ export function CannedResponsesSettings() {
       ) : (
         <CannedResponseForm
           initialValues={initialValues}
-          canManageShared={canManageShared}
           editingId={editingResponse?.id || null}
           onSubmit={handleSubmit}
           onCancel={resetForm}
