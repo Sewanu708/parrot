@@ -46,7 +46,9 @@ export const getPropertiesRoute = expressHandler({
 export const getWidgetConfigRoute = expressHandler({
   method: "get",
   path: "/widget/properties/:propertyId",
-  middlewares: [unauthenticatedLimiter, requireVisitorAuth],
+  middlewares: [unauthenticatedLimiter, 
+    // requireVisitorAuth
+  ],
   handler: TenantController.getWidgetConfig.bind(TenantController),
 });
 

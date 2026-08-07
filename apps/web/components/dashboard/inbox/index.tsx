@@ -8,12 +8,12 @@ import { useSession } from "next-auth/react";
 import { InboxSidebar } from "./sidebar";
 import { ChatArea } from "./chat-area";
 import { useSendMessage } from "@/hooks";
+import { useCannedResponses } from "@/hooks/use-settings";
 import notify from "@/lib/toast";
 import { isParrotErrorInstance } from "@/lib/utilities";
 
 export default function InboxPage() {
   const [activeChat, setActiveChat] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -78,28 +78,14 @@ export default function InboxPage() {
     return () => parrotClient.ws.off("typing:start", handleTyping);
   }, [activeChat]);
 
-  const handleSend = () => {
-    if (draft.trim() && activeChat) {
-      sendMessageMutation.mutate(draft.trim());
-      setDraft("");
+  const handleSend = (text: string) => {
+    if (text.trim() && activeChat) {
+      sendMessageMutation.mutate(text.trim());
       lastTypingEmitRef.current = 0;
     }
   };
 
-  const handleDraftChange = (newDraft: string) => {
-    setDraft(newDraft);
-    
-    if (!lastTypingEmitRef.current || Date.now() - lastTypingEmitRef.current > 2000) {
-      if (newDraft.trim() && activeConversation?.visitor?.id) {
-        parrotClient.ws.emit("typing:start", {
-          conversationId: activeChat,
-          targetVisitorId: activeConversation.visitor.clientVisitorId,
-          senderType: "agent"
-        });
-        lastTypingEmitRef.current = Date.now();
-      }
-    }
-  };
+
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -107,7 +93,11 @@ export default function InboxPage() {
   }, [messages]);
 
   // Send message mutation with Optimistic UI
-  const sendMessageMutation = useSendMessage(activeChat, conversations, () => setDraft(""));
+  const sendMessageMutation = useSendMessage(activeChat, conversations, () => {});
+
+  // Fetch canned responses for slash commands
+  const { data: cannedResponsesData } = useCannedResponses();
+  const cannedResponses = cannedResponsesData?.data || [];
 
   const breadcrumbs = [
     { label: "Parrot Main", href: "/overview" },
@@ -144,13 +134,12 @@ export default function InboxPage() {
           <ChatArea 
             activeConversation={activeConversation}
             messages={messages}
-            draft={draft}
-            setDraft={handleDraftChange}
             onSend={handleSend}
             isSending={sendMessageMutation.isPending}
             messagesEndRef={messagesEndRef}
             onBack={() => setActiveChat(null)}
             isTyping={isTyping}
+            cannedResponses={cannedResponses}
           />
         </div>
       </div>

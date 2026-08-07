@@ -1,31 +1,29 @@
-import type { ConversationWithVisitorDto, MessageDto } from "@parrot/sdk";
-import { ChevronLeft, Paperclip } from "lucide-react";
+import type { ConversationWithVisitorDto, MessageDto, CannedResponseDto } from "@parrot/sdk";
+import { ChevronLeft } from "lucide-react";
 import { ParrotEmptyIcon } from "@/components/icons";
 import { UIMessage } from "@/hooks";
-import TextareaAutosize from "react-textarea-autosize";
+import { ChatComposer } from "@/components/parrot-ui/chat-composer";
 
 interface ChatAreaProps {
   activeConversation?: ConversationWithVisitorDto;
   messages: UIMessage[];
-  draft: string;
-  setDraft: (val: string) => void;
-  onSend: () => void;
+  onSend: (text: string) => void;
   isSending: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   onBack?: () => void;
   isTyping?: boolean;
+  cannedResponses: CannedResponseDto[];
 }
 
 export function ChatArea({
   activeConversation,
   messages,
-  draft,
-  setDraft,
   onSend,
   isSending,
   messagesEndRef,
   onBack,
   isTyping,
+  cannedResponses,
 }: ChatAreaProps) {
   if (!activeConversation) {
     return (
@@ -132,41 +130,11 @@ export function ChatArea({
       </div>
 
       {/* Input Area */}
-      <div className="p-4 bg-white dark:bg-[#191919]">
-        <div className="border border-[#e9e9e7] dark:border-[#333333] rounded-lg p-2 focus-within:border-[#37352f] dark:focus-within:border-white transition-colors shadow-sm bg-white dark:bg-[#202020]">
-          <TextareaAutosize
-            className="w-full bg-transparent resize-none outline-none text-sm p-2 text-[#37352f] dark:text-[#ffffff] placeholder-[#37352f]/40 dark:placeholder-[#777777]"
-            minRows={2}
-            maxRows={8}
-            placeholder="Reply..."
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                onSend();
-              }
-            }}
-          />
-          <div className="flex justify-between items-center mt-2 px-2 pb-1">
-            <div className="flex items-center gap-2 text-[#37352f]/50 dark:text-[#777777]">
-              <Paperclip className="w-4 h-4 cursor-pointer hover:text-[#37352f] dark:hover:text-[#ffffff] transition-colors" />
-            </div>
-            <button
-              onClick={onSend}
-              disabled={isSending || !draft.trim()}
-              className="h-7 px-4 rounded text-xs font-medium bg-[#37352f] dark:bg-white hover:opacity-90 disabled:opacity-50 text-white dark:text-black transition-opacity cursor-pointer outline-none"
-            >
-              {isSending ? "..." : "Send"}
-            </button>
-          </div>
-        </div>
-        <div className="text-center mt-2">
-          <span className="text-[10px] text-[#37352f]/40 dark:text-[#555555]">
-            Press <kbd className="font-sans font-bold">⌘ Enter</kbd> to send
-          </span>
-        </div>
-      </div>
+      <ChatComposer
+        onSend={onSend}
+        isSending={isSending}
+        cannedResponses={cannedResponses}
+      />
     </>
   );
 }

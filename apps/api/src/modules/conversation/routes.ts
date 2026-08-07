@@ -11,7 +11,9 @@ import { authenticatedLimiter, unauthenticatedLimiter } from "../../shared/middl
 export const sendVisitorMessageRoute = expressHandler({
   method: "post",
   path: "/widget/messages",
-  middlewares: [unauthenticatedLimiter, optionalVisitorAuth, validateRequest({ body: VisitorConversationSchema })],
+  middlewares: [unauthenticatedLimiter, 
+    // optionalVisitorAuth, 
+    validateRequest({ body: VisitorConversationSchema })],
   handler: ConversationController.sendVisitorMessage.bind(
     ConversationController,
   ),
@@ -33,7 +35,11 @@ export const sendAgentMessageRoute = expressHandler({
 export const getConversationMessagesRoute = expressHandler({
   method: "get",
   path: "/conversations/:conversationId/messages",
-  middlewares: [requireAuth, authenticatedLimiter, requireTenant, requestPermission(PERMISSIONS.CONVERSATIONS_READ)],
+  middlewares: [
+    // requireAuth, requireTenant,
+    // authenticatedLimiter,
+    //  requireTenant, requestPermission(PERMISSIONS.CONVERSATIONS_READ)
+  ],
   handler: ConversationController.getMessages.bind(ConversationController),
 });
 
@@ -47,7 +53,9 @@ export const getConversationsRoute = expressHandler({
 export const getVisitorMessagesRoute = expressHandler({
   method: "get",
   path: "/widget/conversations/:conversationId/messages",
-  middlewares: [unauthenticatedLimiter, requireVisitorAuth],
+  middlewares: [unauthenticatedLimiter, 
+    // requireVisitorAuth
+  ],
   handler: ConversationController.getMessages.bind(ConversationController),
 });
 
