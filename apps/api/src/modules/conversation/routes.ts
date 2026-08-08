@@ -2,18 +2,27 @@ import expressHandler from "../../express/handler";
 import { ConversationController } from "./controller";
 import { VisitorConversationSchema, SendAgentMessageSchema } from "@parrot/sdk";
 import { validateRequest } from "../../shared/middleware/validate";
-import { requireAuth, optionalVisitorAuth, requireVisitorAuth } from "../../shared/middleware/auth";
+import {
+  requireAuth,
+  optionalVisitorAuth,
+  requireVisitorAuth,
+} from "../../shared/middleware/auth";
 import { requireTenant } from "../../shared/middleware/tenant";
 import requestPermission from "../../shared/middleware/permissions";
 import { PERMISSIONS } from "../../express/constant";
-import { authenticatedLimiter, unauthenticatedLimiter } from "../../shared/middleware/limiter";
+import {
+  authenticatedLimiter,
+  unauthenticatedLimiter,
+} from "../../shared/middleware/limiter";
 
 export const sendVisitorMessageRoute = expressHandler({
   method: "post",
   path: "/widget/messages",
-  middlewares: [unauthenticatedLimiter, 
-    // optionalVisitorAuth, 
-    validateRequest({ body: VisitorConversationSchema })],
+  middlewares: [
+    unauthenticatedLimiter,
+    optionalVisitorAuth,
+    validateRequest({ body: VisitorConversationSchema }),
+  ],
   handler: ConversationController.sendVisitorMessage.bind(
     ConversationController,
   ),
@@ -36,9 +45,11 @@ export const getConversationMessagesRoute = expressHandler({
   method: "get",
   path: "/conversations/:conversationId/messages",
   middlewares: [
-    // requireAuth, requireTenant,
-    // authenticatedLimiter,
-    //  requireTenant, requestPermission(PERMISSIONS.CONVERSATIONS_READ)
+    requireAuth,
+    requireTenant,
+    authenticatedLimiter,
+    requireTenant,
+    requestPermission(PERMISSIONS.CONVERSATIONS_READ),
   ],
   handler: ConversationController.getMessages.bind(ConversationController),
 });
@@ -46,18 +57,26 @@ export const getConversationMessagesRoute = expressHandler({
 export const getConversationsRoute = expressHandler({
   method: "get",
   path: "/conversations",
-  middlewares: [requireAuth, authenticatedLimiter, requireTenant, requestPermission(PERMISSIONS.CONVERSATIONS_READ)],
+  middlewares: [
+    requireAuth,
+    authenticatedLimiter,
+    requireTenant,
+    requestPermission(PERMISSIONS.CONVERSATIONS_READ),
+  ],
   handler: ConversationController.getConversations.bind(ConversationController),
 });
 
 export const getVisitorMessagesRoute = expressHandler({
   method: "get",
   path: "/widget/conversations/:conversationId/messages",
-  middlewares: [unauthenticatedLimiter, 
-    // requireVisitorAuth
-  ],
+  middlewares: [unauthenticatedLimiter, requireVisitorAuth],
   handler: ConversationController.getMessages.bind(ConversationController),
 });
+
+// dont issue a token for get. This perso n might be
+// - yet to hold a conversation
+// as such doesnt have conversation id, neither does he have visitor id.
+// only generate token if not present when message is actually sent
 
 export const conversationRoutes = [
   sendVisitorMessageRoute,
