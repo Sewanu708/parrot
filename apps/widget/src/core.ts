@@ -57,6 +57,7 @@ export class ParrotWidget {
 
   private async boot() {
     // Fetch Settings & determine Online/Offline Status
+    // this would alway fetch regardless of jwt_token
     const config = await this.api.fetchConfig();
     if (config) {
       this.state.propertyConfig = config;
