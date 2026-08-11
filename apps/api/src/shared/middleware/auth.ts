@@ -59,9 +59,8 @@ export const requireAuth = expressHandler({
   },
 });
 
-// for endpoints like /get messages. This token is required. else, it's assumed on the widget side that it's a new conversation. 
-// btw, if /get messages cant be called if there's no conversation id. 
-
+// for endpoints like /get messages. This token is required. else, it's assumed on the widget side that it's a new conversation.
+// btw, if /get messages cant be called if there's no conversation id.
 
 export const requireVisitorAuth = expressHandler({
   path: "*",
@@ -81,6 +80,13 @@ export const requireVisitorAuth = expressHandler({
       conversationId: string;
       visitorId: string;
     };
+    if (!payload) {
+      appError(
+        "Missing or invalid authorization header",
+        ERROR_CODE.NOAUTHERR,
+        { code: "SL07" },
+      );
+    }
     if (payload.conversationId !== req.params.conversationId) {
       appError(
         "Missing or invalid authorization header",
@@ -117,7 +123,7 @@ export const optionalVisitorAuth = expressHandler({
         conversationId: string;
         visitorId: string;
       };
-      
+
       return {
         augments: {
           meta: {
