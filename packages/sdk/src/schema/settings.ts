@@ -53,3 +53,55 @@ export const UpdateCannedResponseSchema = z.object({
 export type CannedResponseDto = z.infer<typeof CannedResponseSchema>;
 export type CreateCannedResponseDto = z.infer<typeof CreateCannedResponseSchema>;
 export type UpdateCannedResponseDto = z.infer<typeof UpdateCannedResponseSchema>;
+
+export const CustomAttributeTypeSchema = z.enum([
+  "string",
+  "number",
+  "boolean",
+  "date",
+]);
+export type CustomAttributeType = z.infer<typeof CustomAttributeTypeSchema>;
+
+export const CustomAttributeSchema = z.object({
+  id: z.uuid(),
+  tenantId: z.uuid(),
+  key: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-zA-Z0-9_]+$/, "Key can only contain letters, numbers, and underscores"),
+  label: z.string().min(1).max(100),
+  description: z.string().max(255).optional().nullable(),
+  type: CustomAttributeTypeSchema,
+  defaultValue: z.string().optional().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const CreateCustomAttributeSchema = z.object({
+  key: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-zA-Z0-9_]+$/, "Key can only contain letters, numbers, and underscores"),
+  label: z.string().min(1).max(100),
+  description: z.string().max(255).optional(),
+  type: CustomAttributeTypeSchema.default("string"),
+  defaultValue: z.string().optional(),
+});
+
+export const UpdateCustomAttributeSchema = z.object({
+  label: z.string().min(1).max(100).optional(),
+  description: z.string().max(255).optional().nullable(),
+  type: CustomAttributeTypeSchema.optional(),
+  defaultValue: z.string().optional().nullable(),
+});
+
+export type CustomAttributeDto = z.infer<typeof CustomAttributeSchema>;
+export type CreateCustomAttributeDto = z.infer<
+  typeof CreateCustomAttributeSchema
+>;
+export type UpdateCustomAttributeDto = z.infer<
+  typeof UpdateCustomAttributeSchema
+>;
+

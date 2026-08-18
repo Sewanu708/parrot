@@ -2,8 +2,8 @@ import { WebSocket, WebSocketServer } from "ws";
 import type { Server as HTTPServer } from "node:http";
 import { logger } from "../logger";
 import { db } from "@parrot/db/src/config";
-import { conversations, tenantMembers } from "@parrot/db/src/schema";
-import { eq } from "drizzle-orm";
+import { conversations, tenantMembers, visitors } from "@parrot/db/src/schema";
+import { eq, and } from "drizzle-orm";
 import { getRedisInstance } from "../shared/redis";
 
 export interface WSEvent<T = any> {
@@ -25,23 +25,24 @@ export class WSGateway {
   init(server: HTTPServer) {
     this.wss = new WebSocketServer({ server, path: "/ws" });
 
-    this.wss.on("connection", (socket: WebSocket, request) => {
+    this.wss.on("connection", async (socket: WebSocket, request) => {
       logger.info("Websocket connection triggering");
       const url = new URL(request.url || "", `http://${request.headers.host}`);
       const clientType = url.searchParams.get("type"); // "agent" | "visitor"
       const tenantId = url.searchParams.get("tenantId");
       const visitorId = url.searchParams.get("visitorId");
+      const propertyId = url.searchParams.get("propertyId");
       const userId = url.searchParams.get("userId");
 
       logger.info(
-        { clientType, tenantId, visitorId, userId },
+        { clientType, tenantId, visitorId, propertyId, userId },
         "New WebSocket connection",
       );
 
       if (clientType === "agent" && userId) {
         this.registerAgent(userId, socket);
-      } else if (clientType === "visitor" && visitorId) {
-        this.registerVisitor(visitorId, socket);
+      } else if (clientType === "visitor" && visitorId && propertyId) {
+        await this.verifyAndRegisterVisitor(visitorId, propertyId, socket);
       } else {
         // Fallback or handshake reject
         socket.close(4000, "Missing client identification params");
@@ -135,6 +136,39 @@ export class WSGateway {
     }
 
     this.redisInstance.del(userId);
+  }
+
+  async verifyAndRegisterVisitor(
+    clientVisitorId: string,
+    propertyId: string,
+    socket: WebSocket,
+  ) {
+    try {
+      const [existingVisitor] = await db
+        .select({ id: visitors.id })
+        .from(visitors)
+        .where(
+          and(
+            eq(visitors.clientVisitorId, clientVisitorId),
+            eq(visitors.propertyId, propertyId),
+          ),
+        )
+        .limit(1);
+
+      if (!existingVisitor) {
+        logger.warn(
+          { clientVisitorId, propertyId },
+          "Rejected WS connection: visitor record not found",
+        );
+        socket.close(4001, "Unknown Visitor");
+        return;
+      }
+
+      this.registerVisitor(clientVisitorId, socket);
+    } catch (err) {
+      logger.error({ err, clientVisitorId }, "Error verifying WS visitor");
+      socket.close(4500, "Internal Server Error");
+    }
   }
 
   registerVisitor(visitorId: string, socket: WebSocket) {

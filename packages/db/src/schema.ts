@@ -588,6 +588,35 @@ export const createCannedResponsesUniqueIndexPersonal = sql`
   ON canned_responses (tenant_id, owner_id, shortcut)
   WHERE visibility = 'personal'
 `;
+
+export const customAttributes = pgTable(
+  "custom_attributes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    tenantId: uuid("tenant_id")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    label: text("label").notNull(),
+    description: text("description"),
+    type: text("type").notNull().default("string"),
+    defaultValue: text("default_value"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("idx_custom_attributes_tenant_id").on(table.tenantId),
+    uniqueIndex("uq_custom_attributes_tenant_key").on(
+      table.tenantId,
+      table.key,
+    ),
+  ],
+);
+
 // ──────────────────────────────────────────────
 //  Inferred Types
 // ──────────────────────────────────────────────
@@ -612,3 +641,5 @@ export type KnowledgeBaseCategory = InferSelectModel<
 export type KnowledgeBaseArticle = InferSelectModel<
   typeof knowledgeBaseArticles
 >;
+export type CustomAttribute = InferSelectModel<typeof customAttributes>;
+

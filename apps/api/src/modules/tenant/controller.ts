@@ -3,7 +3,14 @@ import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
 import { isPropertyOnline } from "../../shared/utils/availability";
 import { tenantRepository } from "./repository";
-import type { CreateTenantDto, UpdateTenantDto, UpdatePropertyDto, WidgetPropertyConfigDto } from "@parrot/sdk";
+import type {
+  CreateTenantDto,
+  UpdateTenantDto,
+  UpdatePropertyDto,
+  WidgetPropertyConfigDto,
+  CustomAttributeType,
+} from "@parrot/sdk";
+
 import { AuthRepository } from "../auth/repository";
 import { Session, User } from "@parrot/db/src/schema";
 import { env } from "../../shared/env";
@@ -164,17 +171,31 @@ export class TenantController {
       appError("Property not found", ERROR_CODE.NOTFOUND, { code: "SL04" });
     }
 
-    const { property, hours, exceptions } = data;
+    const { property, hours, exceptions, customAttributes } = data;
     const isOnline = isPropertyOnline(property.timezone, hours, exceptions);
 
     const config: WidgetPropertyConfigDto = {
       name: property.name,
       brandColor: property.brandColor,
       logoUrl: property.logoUrl,
-      settings: property.settings as Record<string,any>,
+      settings: property.settings as Record<string, any>,
       isOnline,
+      allowedDomains: property.allowedDomains || [],
+      customAttributes: (customAttributes || []).map((attr) => ({
+        id: attr.id,
+        tenantId: attr.tenantId,
+        key: attr.key,
+        label: attr.label,
+        description: attr.description,
+        type: attr.type as CustomAttributeType,
+        defaultValue: attr.defaultValue,
+        createdAt: attr.createdAt.toISOString(),
+        updatedAt: attr.updatedAt.toISOString(),
+      })),
     };
+
 
     return { status: 200, data: config };
   }
 }
+

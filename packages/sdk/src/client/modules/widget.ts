@@ -3,6 +3,9 @@ import type {
   SendMessageResponse,
   SendVisitorMessageInput,
   MessageDto,
+  IdentifyVisitorDto,
+  VisitorDto,
+  WidgetConversationPreviewDto,
 } from "../../schema/conversation";
 import type { WidgetPropertyConfigDto } from "../../schema/tenant";
 
@@ -14,10 +17,25 @@ export class WidgetModule {
   }
 
   async fetchConfig(propertyId: string) {
-    return this.http.get<WidgetPropertyConfigDto>(`/widget/properties/${propertyId}`);
+    return this.http.get<WidgetPropertyConfigDto>(
+      `/widget/properties/${propertyId}`,
+    );
   }
 
   async getMessages(conversationId: string) {
-    return this.http.get<MessageDto[]>(`/widget/conversations/${conversationId}/messages`);
+    return this.http.get<MessageDto[]>(
+      `/widget/conversations/${conversationId}/messages`,
+    );
+  }
+
+  async identify(input: IdentifyVisitorDto) {
+    return this.http.post<VisitorDto>("/widget/identify", input);
+  }
+
+  async getConversations(propertyId: string, clientVisitorId: string) {
+    return this.http.get<WidgetConversationPreviewDto[]>(
+      `/widget/conversations?propertyId=${propertyId}&clientVisitorId=${clientVisitorId}`,
+    );
   }
 }
+

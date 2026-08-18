@@ -5,12 +5,67 @@ import { conversationRepository } from "./repository";
 import type {
   SendVisitorMessageInput,
   SendAgentMessageInput,
+  IdentifyVisitorDto,
 } from "@parrot/sdk";
 import type { User } from "@parrot/db/src/schema";
 import { wsGateway } from "../../ws/gateway";
-import { generateJWT } from "../../shared/utils/global";
 
 export class ConversationController {
+  /**
+   * Identify and enrich a visitor with user context
+   */
+  static async identifyVisitor(req: RequestComponents): Promise<HandlerResult> {
+    const data = req.body as IdentifyVisitorDto;
+
+    try {
+      const visitor = await conversationRepository.identifyVisitor(data);
+      return {
+        status: 200,
+        message: "Visitor identified successfully",
+        data: visitor,
+      };
+    } catch (error) {
+      appError("Failed to identify visitor", ERROR_CODE.APPERR, {
+        code: "SL14",
+        cause: error,
+      });
+    }
+  }
+
+  /**
+   * Get past conversations list for a widget visitor
+   */
+  static async getWidgetConversations(
+    req: RequestComponents,
+  ): Promise<HandlerResult> {
+    const propertyId = req.query.propertyId as string;
+    const clientVisitorId = req.query.clientVisitorId as string;
+
+    if (!propertyId || !clientVisitorId) {
+      appError(
+        "Property ID and Client Visitor ID are required",
+        ERROR_CODE.INVLDDATA,
+        { code: "SL01" },
+      );
+    }
+
+    try {
+      const list = await conversationRepository.getWidgetConversations(
+        propertyId,
+        clientVisitorId,
+      );
+      return {
+        status: 200,
+        data: list,
+      };
+    } catch (error) {
+      appError("Failed to fetch widget conversations", ERROR_CODE.APPERR, {
+        code: "SL00",
+        cause: error,
+      });
+    }
+  }
+
   /**
    * Visitor sends a message from the embeddable widget
    */
@@ -18,15 +73,9 @@ export class ConversationController {
     req: RequestComponents,
   ): Promise<HandlerResult> {
     const data = req.body as SendVisitorMessageInput;
-    const origin = req.headers.origin as string | undefined;
-    const visitorAuth = req.meta?.visitor as { conversationId: string; visitorId: string } | undefined;
-
-    if (visitorAuth && data.conversationId && visitorAuth.conversationId !== data.conversationId) {
-      appError("Unauthorized", ERROR_CODE.NOAUTHERR, { code: "SL07" });
-    }
 
     try {
-      const result = await conversationRepository.createVisitorMessage(data, origin, visitorAuth);
+      const result = await conversationRepository.createVisitorMessage(data);
 
       // Real-time notification to online tenant agents via WS
       wsGateway.broadcastToTenant(result.tenantId, {
@@ -41,21 +90,12 @@ export class ConversationController {
         },
       });
 
-      let token;
-      if (!visitorAuth) {
-        token = generateJWT({
-          conversationId: result.conversation.id,
-          visitorId: result.visitorId!,
-        });
-      }
-
       return {
         status: 201,
         message: "Message sent successfully",
         data: {
           conversationId: result.conversation.id,
           message: result.message,
-          ...(token && { token }),
         },
       };
     } catch (error) {
@@ -65,6 +105,7 @@ export class ConversationController {
       });
     }
   }
+
 
   /**
    * Agent sends a message from the web dashboard

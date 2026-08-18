@@ -19,9 +19,14 @@ class WsClient {
   private lastConnectionParams: any = null;
 
   constructor(parrotClientOptions: ParrotClientOptions) {
+    const envUrl =
+      typeof process !== "undefined" && process.env
+        ? process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_API_URL
+        : undefined;
+
     const httpUrl =
       parrotClientOptions.baseUrl ??
-      process.env.NEXTAUTH_URL ??
+      envUrl ??
       "http://localhost:8080";
 
     this.url = httpUrl.replace(/^http/, "ws").replace(/\/api$/, "");
@@ -35,16 +40,18 @@ class WsClient {
   connect({
     type,
     visitorId,
+    propertyId,
     userId,
     tenantId,
   }: {
     type: "visitor" | "agent";
     visitorId?: string;
+    propertyId?: string;
     userId?: string;
     tenantId?: string;
   }) {
     // Store connection params for reconnection attempts
-    this.lastConnectionParams = { type, visitorId, userId, tenantId };
+    this.lastConnectionParams = { type, visitorId, propertyId, userId, tenantId };
 
     if (this.ws || this.isConnecting) return;
     this.isConnecting = true;
@@ -60,6 +67,7 @@ class WsClient {
         standardUrl.searchParams.append("tenantId", tenantId);
         
       if (visitorId) standardUrl.searchParams.append("visitorId", visitorId);
+      if (propertyId) standardUrl.searchParams.append("propertyId", propertyId);
       standardUrl.searchParams.append("type", type);
 
       this.ws = new WebSocket(standardUrl);
