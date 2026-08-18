@@ -20,7 +20,7 @@ echo "Schema changes detected:"
 echo "$ANY_CHANGES" | sed 's/^/   /'
 echo ""
 
-IS_STAGED=$(echo "$STAGED" | grep "$MIGRATION_PATH" || true)
+IS_STAGED=$(echo "$STAGED" | grep "$MIGRATIONS_PATH" || true)
 
 if [ -z "$IS_STAGED" ]; then
     echo "ERROR: Entity files were modified but no migration file was staged."
