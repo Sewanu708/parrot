@@ -1,6 +1,12 @@
 import expressHandler from "../../express/handler";
 import { SettingsController } from "./controller";
-import { UpdateBusinessHoursConfigSchema, CreateCannedResponseSchema, UpdateCannedResponseSchema } from "@parrot/sdk";
+import {
+  UpdateBusinessHoursConfigSchema,
+  CreateCannedResponseSchema,
+  UpdateCannedResponseSchema,
+  CreateCustomAttributeSchema,
+  UpdateCustomAttributeSchema,
+} from "@parrot/sdk";
 import { validateRequest } from "../../shared/middleware/validate";
 import { authenticatedLimiter } from "../../shared/middleware/limiter";
 import { requireAuth } from "../../shared/middleware/auth";
@@ -69,6 +75,42 @@ export const deleteCannedResponseRoute = expressHandler({
   handler: SettingsController.deleteCannedResponse.bind(SettingsController),
 });
 
+// --- Custom Attributes Routes ---
+
+export const getCustomAttributesRoute = expressHandler({
+  method: "get",
+  path: "/settings/custom-attributes",
+  middlewares: readMiddlewares,
+  handler: SettingsController.getCustomAttributes.bind(SettingsController),
+});
+
+export const createCustomAttributeRoute = expressHandler({
+  method: "post",
+  path: "/settings/custom-attributes",
+  middlewares: [
+    ...settingsMiddlewares,
+    validateRequest({ body: CreateCustomAttributeSchema }),
+  ],
+  handler: SettingsController.createCustomAttribute.bind(SettingsController),
+});
+
+export const updateCustomAttributeRoute = expressHandler({
+  method: "patch",
+  path: "/settings/custom-attributes/:id",
+  middlewares: [
+    ...settingsMiddlewares,
+    validateRequest({ body: UpdateCustomAttributeSchema }),
+  ],
+  handler: SettingsController.updateCustomAttribute.bind(SettingsController),
+});
+
+export const deleteCustomAttributeRoute = expressHandler({
+  method: "delete",
+  path: "/settings/custom-attributes/:id",
+  middlewares: settingsMiddlewares,
+  handler: SettingsController.deleteCustomAttribute.bind(SettingsController),
+});
+
 export const settingsRoutes = [
   getBusinessHoursRoute,
   updateBusinessHoursRoute,
@@ -76,4 +118,9 @@ export const settingsRoutes = [
   createCannedResponseRoute,
   updateCannedResponseRoute,
   deleteCannedResponseRoute,
+  getCustomAttributesRoute,
+  createCustomAttributeRoute,
+  updateCustomAttributeRoute,
+  deleteCustomAttributeRoute,
 ];
+

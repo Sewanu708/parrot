@@ -25,6 +25,11 @@ export const env = createEnv({
       .email()
       .optional()
       .default("Parrot <noreply@yourdomain.com>"),
+    WIDGET_CDN_URL: z
+      .string()
+      .url()
+      .optional()
+      .default("http://localhost:5173"),
   },
 
   runtimeEnv: process.env,

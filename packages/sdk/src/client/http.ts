@@ -12,7 +12,7 @@ export interface ParrotClientOptions {
   fetchFn?: typeof fetch;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T> {
   status: "success" | "error";
   message?: string;
   data?: T;

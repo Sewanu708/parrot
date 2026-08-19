@@ -15,7 +15,7 @@ import { useCreateTenant } from "@/hooks";
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { UploadButton } from "@/lib/uploadthing";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, ExternalLink } from "lucide-react";
 
 export default function CreateWorkspacePage() {
   const router = useRouter();
@@ -25,14 +25,25 @@ export default function CreateWorkspacePage() {
     null,
   );
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
+  const [copiedDirect, setCopiedDirect] = useState(false);
 
-  const handleCopySnippet = () => {
-    if (!createdPropertyId) return;
-    const snippet = `<script \n  src="http://localhost:3000/widget.js" \n  data-property-id="${createdPropertyId}">\n</script>`;
-    navigator.clipboard.writeText(snippet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const getSnippet = (propertyId: string) =>
+    `<!-- Parrot Live Chat Widget -->\n<script src="https://cdn.parrot.app/parrot.js"></script>\n<script>\n  window.parrot = new Parrot({\n    propertyId: "${propertyId}"\n  });\n</script>`;
+
+  const getDirectChatUrl = (propertyId: string) =>
+    `https://cdn.parrot.app/src/embed/embed.html?propertyId=${propertyId}`;
+
+  const handleCopy = (text: string, type: "snippet" | "direct") => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    if (type === "snippet") {
+      setCopiedSnippet(true);
+      setTimeout(() => setCopiedSnippet(false), 2000);
+    } else {
+      setCopiedDirect(true);
+      setTimeout(() => setCopiedDirect(false), 2000);
+    }
   };
 
   const {
@@ -124,29 +135,67 @@ export default function CreateWorkspacePage() {
 
           {createdPropertyId ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Option 1: Script Snippet */}
               <div className="space-y-2">
-                <p className="text-sm text-neutral-400">
-                  You're all set! Copy and paste this snippet into the{" "}
-                  <code>&lt;head&gt;</code> of your website to install the
-                  widget.
-                </p>
+                <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+                  Website Installation Snippet
+                </label>
+                <div className="bg-black border border-dash-border rounded-md p-4 overflow-x-auto relative group">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleCopy(getSnippet(createdPropertyId), "snippet")
+                    }
+                    className="absolute top-2 right-2 p-1.5 bg-neutral-800/80 hover:bg-neutral-700 rounded-md text-neutral-400 hover:text-white transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+                    title="Copy snippet"
+                  >
+                    {copiedSnippet ? (
+                      <Check className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </button>
+                  <pre className="text-xs text-emerald-400 font-mono whitespace-pre-wrap word-break pt-6 sm:pt-0">
+                    {getSnippet(createdPropertyId)}
+                  </pre>
+                </div>
               </div>
-              <div className="bg-black border border-dash-border rounded-md p-4 overflow-x-auto relative group">
-                <button
-                  type="button"
-                  onClick={handleCopySnippet}
-                  className="absolute top-2 right-2 p-1.5 bg-neutral-800/80 hover:bg-neutral-700 rounded-md text-neutral-400 hover:text-white transition-all cursor-pointer opacity-0 group-hover:opacity-100"
-                  title="Copy snippet"
-                >
-                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                </button>
-                <pre className="text-xs text-emerald-400 font-mono whitespace-pre-wrap word-break pt-6 sm:pt-0">
-                  {`<script 
-  src="http://localhost:3000/widget.js" 
-  data-property-id="${createdPropertyId}">
-</script>`}
-                </pre>
+
+              {/* Option 2: Direct Chat URL */}
+              <div className="space-y-2">
+                <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+                  Direct Browser Chat Link
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-[#f7f7f5] dark:bg-[#202020] border border-[#e9e9e7] dark:border-[#333333] rounded-md px-3 py-2 text-xs font-mono text-[#37352f] dark:text-[#ffffff] truncate select-all">
+                    {getDirectChatUrl(createdPropertyId)}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleCopy(getDirectChatUrl(createdPropertyId), "direct")
+                    }
+                    className="p-2 bg-neutral-100 dark:bg-[#252525] hover:bg-neutral-200 dark:hover:bg-[#333333] rounded-md text-[#37352f] dark:text-white transition-colors cursor-pointer shrink-0"
+                    title="Copy direct link"
+                  >
+                    {copiedDirect ? (
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </button>
+                  <a
+                    href={getDirectChatUrl(createdPropertyId)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 bg-neutral-100 dark:bg-[#252525] hover:bg-neutral-200 dark:hover:bg-[#333333] rounded-md text-[#37352f] dark:text-white transition-colors cursor-pointer shrink-0"
+                    title="Preview direct chat"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
+
               <button
                 onClick={() => {
                   router.push("/dashboard");

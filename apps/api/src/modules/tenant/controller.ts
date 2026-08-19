@@ -145,18 +145,18 @@ export class TenantController {
 
     const properties = await tenantRepository.getPropertiesByTenantId(tenantId);
 
-    const propertiesWithSnippet = properties.map((property) => {
-      const widgetUrl = env.FRONTEND_URL;
-      const installationSnippet = `<script \n  src="${widgetUrl}/widget.js" \n  data-property-id="${property.id}">\n</script>`;
+    const widgetCdnUrl = env.WIDGET_CDN_URL || "http://localhost:5173";
+    const propertiesWithUrls = properties.map((property) => {
+      const directChatUrl = `${widgetCdnUrl.replace(/\/$/, "")}/src/embed/embed.html?propertyId=${property.id}`;
       return {
         ...property,
-        installationSnippet,
+        directChatUrl,
       };
     });
 
     return {
       status: 200,
-      data: propertiesWithSnippet,
+      data: propertiesWithUrls,
     };
   }
 

@@ -7,7 +7,7 @@ import notify from "@/lib/toast";
 import { BrandSettings } from "./brand-settings";
 import { GeneralSettings } from "./general-settings";
 import { BusinessHoursSettings } from "./business-hours";
-import { Copy, Check, Plus, ChevronLeft } from "lucide-react";
+import { Copy, Check, Plus, ChevronLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PropertyDto } from "@parrot/sdk";
@@ -18,7 +18,9 @@ export function PropertiesSettings() {
   const activeTenantId = user?.activeTenantId;
 
   const [activePropertyId, setActivePropertyId] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedType, setCopiedType] = useState<"snippet" | "direct" | null>(
+    null,
+  );
 
   const { data: propertiesResponse, isLoading } = useQuery({
     queryKey: ["properties", activeTenantId],
@@ -28,11 +30,16 @@ export function PropertiesSettings() {
 
   const properties = propertiesResponse?.data || [];
 
-  const handleCopySnippet = (property?: PropertyDto) => {
-    if (!property?.installationSnippet) return;
-    navigator.clipboard.writeText(property.installationSnippet);
-    setCopiedId(property.id);
-    setTimeout(() => setCopiedId(null), 2000);
+  const handleCopy = (text: string, type: "snippet" | "direct") => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    notify.success(
+      type === "snippet"
+        ? "Installation snippet copied!"
+        : "Direct chat URL copied!",
+    );
+    setTimeout(() => setCopiedType(null), 2000);
   };
 
   const activeProperty = properties.find((p) => p.id === activePropertyId);
@@ -158,34 +165,97 @@ export function PropertiesSettings() {
           <div className="flex flex-col">
             {activeProperty && <GeneralSettings property={activeProperty} />}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 py-8 border-b border-[#e9e9e7] dark:border-[#2d2d2d] last:border-0">
+            {/* Website Installation */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 py-8 border-b border-[#e9e9e7] dark:border-[#2d2d2d]">
               <div className="md:col-span-1 space-y-1">
                 <h2 className="text-base font-semibold text-[#37352f] dark:text-[#ffffff]">
-                  Installation
+                  Website Installation
                 </h2>
                 <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b]">
-                  Copy and paste this snippet into the <code>&lt;head&gt;</code>{" "}
-                  of your website to install the widget.
+                  Copy and paste this snippet before the closing{" "}
+                  <code>&lt;/head&gt;</code> tag on your website.
                 </p>
               </div>
               <div className="md:col-span-2">
                 <div className="bg-black border border-dash-border rounded-md p-4 overflow-x-auto relative group">
                   <button
                     type="button"
-                    onClick={() => handleCopySnippet(activeProperty)}
+                    onClick={() =>
+                      handleCopy(
+                        `<!-- Parrot Live Chat Widget -->\n<script src="https://cdn.parrot.app/parrot.js"></script>\n<script>\n  window.parrot = new Parrot({\n    propertyId: "${activeProperty?.id}"\n  });\n</script>`,
+                        "snippet",
+                      )
+                    }
                     className="absolute top-2 right-2 p-1.5 bg-neutral-800/80 hover:bg-neutral-700 rounded-md text-neutral-400 hover:text-white transition-all cursor-pointer opacity-0 group-hover:opacity-100"
                     title="Copy snippet"
                   >
-                    {copiedId === activeProperty?.id ? (
+                    {copiedType === "snippet" ? (
                       <Check className="w-4 h-4 text-emerald-400" />
                     ) : (
                       <Copy className="w-4 h-4" />
                     )}
                   </button>
                   <pre className="text-xs text-emerald-400 font-mono whitespace-pre-wrap word-break pt-6 sm:pt-0">
-                    {activeProperty?.installationSnippet ||
-                      "Loading snippet..."}
+                    {`<!-- Parrot Live Chat Widget -->\n<script src="https://cdn.parrot.app/parrot.js"></script>\n<script>\n  window.parrot = new Parrot({\n    propertyId: "${activeProperty?.id}"\n  });\n</script>`}
                   </pre>
+                </div>
+              </div>
+            </div>
+
+            {/* Direct Browser Chat Link */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-12 py-8 border-b border-[#e9e9e7] dark:border-[#2d2d2d]">
+              <div className="md:col-span-1 space-y-1">
+                <h2 className="text-base font-semibold text-[#37352f] dark:text-[#ffffff]">
+                  Direct Browser Chat
+                </h2>
+                <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b]">
+                  Share this link directly with customers via email, SMS, or
+                  social bios for instant chat without needing a website.
+                </p>
+              </div>
+              <div className="md:col-span-2 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-[#f7f7f5] dark:bg-[#202020] border border-[#e9e9e7] dark:border-[#2d2d2d] rounded-md px-3.5 py-2.5 text-xs font-mono text-[#37352f] dark:text-[#ffffff] truncate select-all">
+                    {activeProperty?.directChatUrl ||
+                      (activeProperty?.id
+                        ? `https://cdn.parrot.app/src/embed/embed.html?propertyId=${activeProperty.id}`
+                        : "Generating link...")}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleCopy(
+                        activeProperty?.directChatUrl ||
+                          `https://cdn.parrot.app/src/embed/embed.html?propertyId=${activeProperty?.id}`,
+                        "direct",
+                      )
+                    }
+                    className="gap-1.5 shrink-0 cursor-pointer h-10 px-3"
+                  >
+                    {copiedType === "direct" ? (
+                      <Check className="w-4 h-4 text-emerald-500" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                    {copiedType === "direct" ? "Copied" : "Copy Link"}
+                  </Button>
+                  {(activeProperty?.directChatUrl || activeProperty?.id) && (
+                    <a
+                      href={
+                        activeProperty?.directChatUrl ||
+                        `https://cdn.parrot.app/src/embed/embed.html?propertyId=${activeProperty?.id}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 h-10 px-3 text-xs font-medium rounded-md border border-[#e9e9e7] dark:border-[#2d2d2d] bg-white dark:bg-[#191919] hover:bg-[#f7f7f5] dark:hover:bg-[#252525] text-[#37352f] dark:text-white transition-colors cursor-pointer shrink-0"
+                      title="Open chat in new tab"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      Preview
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

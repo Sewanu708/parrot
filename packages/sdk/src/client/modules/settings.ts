@@ -5,7 +5,10 @@ import type {
   BusinessHourExceptionDto,
   CannedResponseDto,
   CreateCannedResponseDto,
-  UpdateCannedResponseDto
+  UpdateCannedResponseDto,
+  CustomAttributeDto,
+  CreateCustomAttributeDto,
+  UpdateCustomAttributeDto
 } from "../../schema/settings";
 
 export interface GetBusinessHoursResponse {
@@ -40,4 +43,22 @@ export class SettingsModule {
   async deleteCannedResponse(id: string) {
     return this.http.delete<void>(`/settings/canned-responses/${id}`);
   }
+
+  // Custom Attributes
+  async getCustomAttributes() {
+    return this.http.get<CustomAttributeDto[]>("/settings/custom-attributes");
+  }
+
+  async createCustomAttribute(data: CreateCustomAttributeDto) {
+    return this.http.post<CustomAttributeDto>("/settings/custom-attributes", data);
+  }
+
+  async updateCustomAttribute(id: string, data: UpdateCustomAttributeDto) {
+    return this.http.patch<CustomAttributeDto>(`/settings/custom-attributes/${id}`, data);
+  }
+
+  async deleteCustomAttribute(id: string) {
+    return this.http.delete<void>(`/settings/custom-attributes/${id}`);
+  }
 }
+

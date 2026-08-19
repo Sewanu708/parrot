@@ -47,6 +47,7 @@ export interface PropertyDto {
   timezone: string;
   settings: Record<string, any>;
   installationSnippet?: string;
+  directChatUrl?: string;
   createdAt: string;
   updatedAt: string;
 }

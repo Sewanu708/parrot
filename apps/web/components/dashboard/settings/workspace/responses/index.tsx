@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Plus, MessageSquareText } from "lucide-react";
+import { Plus, MessageSquareText, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable, ConfirmDeleteModal } from "@/components/parrot-ui";
@@ -17,9 +17,11 @@ import {
 import type { CannedResponseFormData } from "@/lib/schema";
 import { getCannedResponseColumns } from "./column";
 import { CannedResponseForm } from "./form";
+import { CustomAttributesSheet } from "./ca-sheet";
 
 export function CannedResponsesSettings() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isAttributesOpen, setIsAttributesOpen] = useState(false);
   const [editingResponse, setEditingResponse] = useState<CannedResponseDto | null>(null);
   const [deletingResponseTarget, setDeletingResponseTarget] = useState<CannedResponseDto | null>(null);
 
@@ -139,17 +141,26 @@ export function CannedResponsesSettings() {
                 Canned Responses
               </h1>
               <p className="text-sm text-[#37352f]/60 dark:text-[#9b9b9b]">
-                Manage quick replies to reuse in conversations. Type '/' in the
-                editor to use them.
+                Manage dynamic quick replies for conversations. Use <code>{"{{placeholders}}"}</code> powered by custom attributes for instant personalization, and type <code>/</code> in the composer to use them.
               </p>
             </div>
-            <Button
-              onClick={() => setIsFormOpen(true)}
-              className="gap-2 shadow-sm cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              New Response
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsAttributesOpen(true)}
+                className="gap-2 cursor-pointer"
+              >
+                <Tag className="w-4 h-4" />
+                Custom Attributes
+              </Button>
+              <Button
+                onClick={() => setIsFormOpen(true)}
+                className="gap-2 shadow-sm cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                New Response
+              </Button>
+            </div>
           </div>
 
           {responses.length === 0 ? (
@@ -183,8 +194,14 @@ export function CannedResponsesSettings() {
           onSubmit={handleSubmit}
           onCancel={resetForm}
           isPending={createMutation.isPending || updateMutation.isPending}
+          onOpenAttributesSheet={() => setIsAttributesOpen(true)}
         />
       )}
+
+      <CustomAttributesSheet
+        open={isAttributesOpen}
+        onOpenChange={setIsAttributesOpen}
+      />
 
       <ConfirmDeleteModal
         open={Boolean(deletingResponseTarget)}
