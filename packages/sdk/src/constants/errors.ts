@@ -95,6 +95,9 @@ export const PUBLIC_ERROR_CODE = {
   CR06: "Canned response not found.",
   CR07: "You don't have permission to delete shared canned responses.",
   CR08: "You can only delete your own personal canned responses.",
+  CA01: "An attribute with this key already exists in this workspace.",
+  CA02: "Custom attribute not found.",
+  CA03: "Custom attribute not found.",
 } as const;
 
 export type PublicErrorCode = keyof typeof PUBLIC_ERROR_CODE;

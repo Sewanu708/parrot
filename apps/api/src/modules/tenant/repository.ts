@@ -8,7 +8,9 @@ import {
   rolePermissions,
   businessHours,
   businessHourExceptions,
+  customAttributes,
 } from "@parrot/db/src/schema";
+
 import { eq, and } from "drizzle-orm";
 import type {
   CreateTenantDto,
@@ -186,8 +188,14 @@ export class TenantRepository {
       .from(businessHourExceptions)
       .where(eq(businessHourExceptions.propertyId, propertyId));
 
-    return { property, hours, exceptions };
+    const customAttrs = await db
+      .select()
+      .from(customAttributes)
+      .where(eq(customAttributes.tenantId, property.tenantId));
+
+    return { property, hours, exceptions, customAttributes: customAttrs };
   }
+
 
   // Get properties for a tenant
   async getPropertiesByTenantId(tenantId: string) {

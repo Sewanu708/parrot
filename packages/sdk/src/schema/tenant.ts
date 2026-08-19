@@ -47,9 +47,12 @@ export interface PropertyDto {
   timezone: string;
   settings: Record<string, any>;
   installationSnippet?: string;
+  directChatUrl?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+import type { CustomAttributeDto } from "./settings";
 
 export interface WidgetPropertyConfigDto {
   name: string;
@@ -57,5 +60,8 @@ export interface WidgetPropertyConfigDto {
   logoUrl: string | null;
   settings: Record<string, any>;
   isOnline: boolean;
+  allowedDomains: string[];
+  customAttributes: CustomAttributeDto[];
 }
+
 

@@ -4,7 +4,9 @@ import type {
   UpdateBusinessHoursConfigDto, 
   CreateCannedResponseDto, 
   UpdateCannedResponseDto,
-  UpdatePropertyDto 
+  UpdatePropertyDto,
+  CreateCustomAttributeDto,
+  UpdateCustomAttributeDto,
 } from "@parrot/sdk";
 
 // Business Hours Hooks
@@ -83,3 +85,47 @@ export function useUpdateProperty() {
     },
   });
 }
+
+// Custom Attributes Hooks
+export function useCustomAttributes() {
+  return useQuery({
+    queryKey: ["custom-attributes"],
+    queryFn: () => parrotClient.settings.getCustomAttributes(),
+  });
+}
+
+export function useCreateCustomAttribute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateCustomAttributeDto) =>
+      parrotClient.settings.createCustomAttribute(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["custom-attributes"] });
+    },
+  });
+}
+
+export function useUpdateCustomAttribute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateCustomAttributeDto }) =>
+      parrotClient.settings.updateCustomAttribute(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["custom-attributes"] });
+    },
+  });
+}
+
+export function useDeleteCustomAttribute() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => parrotClient.settings.deleteCustomAttribute(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["custom-attributes"] });
+    },
+  });
+}
+

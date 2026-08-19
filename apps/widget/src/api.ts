@@ -1,17 +1,22 @@
-import { ParrotClient, WidgetPropertyConfigDto, MessageDto } from "@parrot/sdk";
-import { WidgetMessage } from "./types";
+import {
+  ParrotClient,
+  type WidgetPropertyConfigDto,
+  type MessageDto,
+  type WidgetConversationPreviewDto,
+} from "@parrot/sdk";
+import type { WidgetMessage, UserContext } from "./types";
+import { config } from "./config";
 
 export class WidgetApi {
   private client: ParrotClient;
 
   constructor(
-    apiHost: string,
     private visitorId: string,
-    private propertyId: string
+    private propertyId: string,
+    apiHost: string = config.apiUrl,
   ) {
-    this.client = new ParrotClient({ 
+    this.client = new ParrotClient({
       baseUrl: apiHost,
-      getToken: () => localStorage.getItem("parrot_visitor_token") || undefined
     });
   }
 
@@ -25,13 +30,43 @@ export class WidgetApi {
     }
   }
 
+  async identify(userContext: UserContext): Promise<boolean> {
+    try {
+      await this.client.widget.identify({
+        propertyId: this.propertyId,
+        clientVisitorId: this.visitorId,
+        name: userContext.name,
+        email: userContext.email,
+        phone: userContext.phone,
+        metadata: userContext.custom,
+      });
+      return true;
+    } catch (e) {
+      console.error("[Parrot Widget] Failed to identify visitor", e);
+      return false;
+    }
+  }
+
+  async fetchConversations(): Promise<WidgetConversationPreviewDto[]> {
+    try {
+      const res = await this.client.widget.getConversations(
+        this.propertyId,
+        this.visitorId,
+      );
+      return res.data || [];
+    } catch (e) {
+      console.error("[Parrot Widget] Failed to fetch conversations list", e);
+      return [];
+    }
+  }
+
   async fetchMessageHistory(conversationId: string): Promise<WidgetMessage[]> {
     try {
       const res = await this.client.widget.getMessages(conversationId);
       if (res.data && Array.isArray(res.data)) {
         return res.data.map((msg: MessageDto) => ({
           id: msg.id,
-          senderType: msg.senderType === "visitor" ? "visitor" : "agent",
+          senderType: msg.senderType,
           body: msg.body || "",
           createdAt: msg.createdAt,
         }));
@@ -43,7 +78,10 @@ export class WidgetApi {
     }
   }
 
-  async sendMessage(text: string, conversationId: string | null): Promise<string | null> {
+  async sendMessage(
+    text: string,
+    conversationId: string | null,
+  ): Promise<string | null> {
     try {
       const payload = {
         ...(conversationId && { conversationId }),
@@ -52,10 +90,6 @@ export class WidgetApi {
         body: text,
       };
       const res = await this.client.widget.sendMessage(payload);
-      
-      if (res.data && res.data.token) {
-        localStorage.setItem("parrot_visitor_token", res.data.token);
-      }
 
       if (res.data && res.data.conversationId) {
         return res.data.conversationId;
@@ -68,24 +102,41 @@ export class WidgetApi {
   }
 
   connectWebSocket(
-    conversationId: string | null,
+    getActiveConversationId: () => string | null,
     onMessage: (msg: WidgetMessage) => void,
-    onTyping: () => void
+    onTyping: () => void,
   ) {
     try {
-      this.client.ws.connect({ type: "visitor", visitorId: this.visitorId });
-      
-      this.client.ws.on("message:new", (data: any) => {
+      this.client.ws.connect({
+        type: "visitor",
+        visitorId: this.visitorId,
+        propertyId: this.propertyId,
+      });
+
+      this.client.ws.on("message:new", (data: {
+        id: string;
+        conversationId: string;
+        senderType: "visitor" | "agent" | "system";
+        body: string | null;
+        createdAt: string;
+      }) => {
         onMessage({
           id: data.id,
           senderType: data.senderType,
-          body: data.body,
+          body: data.body || "",
           createdAt: data.createdAt,
         });
       });
 
-      this.client.ws.on("typing:start", (data: any) => {
-        if (data.senderType === "agent" && data.conversationId === conversationId) {
+      this.client.ws.on("typing:start", (data: {
+        conversationId: string;
+        senderType: string;
+      }) => {
+        const currentConvId = getActiveConversationId();
+        if (
+          data.senderType === "agent" &&
+          data.conversationId === currentConvId
+        ) {
           onTyping();
         }
       });
@@ -97,7 +148,12 @@ export class WidgetApi {
   emitTyping(conversationId: string) {
     this.client.ws.emit("typing:start", {
       conversationId,
-      senderType: "visitor"
+      senderType: "visitor",
     });
   }
+
+  disconnectWebSocket() {
+    this.client.ws.disconnect();
+  }
 }
+

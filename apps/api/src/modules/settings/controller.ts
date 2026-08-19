@@ -2,7 +2,13 @@ import { RequestComponents, HandlerResult } from "../../express/types";
 import { appError } from "../../express/errors";
 import { ERROR_CODE } from "../../express/constant";
 import { SettingsRepository } from "./repository";
-import type { UpdateBusinessHoursConfigDto, CreateCannedResponseDto, UpdateCannedResponseDto } from "@parrot/sdk";
+import type {
+  UpdateBusinessHoursConfigDto,
+  CreateCannedResponseDto,
+  UpdateCannedResponseDto,
+  CreateCustomAttributeDto,
+  UpdateCustomAttributeDto,
+} from "@parrot/sdk";
 import { PERMISSIONS } from "../../express/constant";
 
 export class SettingsController {
@@ -114,5 +120,83 @@ export class SettingsController {
 
     await SettingsRepository.deleteCannedResponse(id);
     return { status: 200, message: "Canned response deleted", data: null };
+  }
+
+  // --- Custom Attributes ---
+
+  static async getCustomAttributes(
+    req: RequestComponents,
+  ): Promise<HandlerResult> {
+    const tenantId = req.meta.tenant.id;
+    const attributes = await SettingsRepository.getCustomAttributes(tenantId);
+    return { status: 200, data: attributes };
+  }
+
+  static async createCustomAttribute(
+    req: RequestComponents,
+  ): Promise<HandlerResult> {
+    const tenantId = req.meta.tenant.id;
+    const data = req.body as CreateCustomAttributeDto;
+
+    const existing = await SettingsRepository.getCustomAttributeByKey(
+      tenantId,
+      data.key,
+    );
+    if (existing) {
+      appError(
+        `Attribute with key '${data.key}' already exists`,
+        ERROR_CODE.INVLDDATA,
+        { code: "CA01" },
+      );
+    }
+
+    const attribute = await SettingsRepository.createCustomAttribute(
+      tenantId,
+      data,
+    );
+    return {
+      status: 201,
+      message: "Custom attribute created",
+      data: attribute,
+    };
+  }
+
+  static async updateCustomAttribute(
+    req: RequestComponents,
+  ): Promise<HandlerResult> {
+    const tenantId = req.meta.tenant.id;
+    const id = req.params.id;
+    const data = req.body as UpdateCustomAttributeDto;
+
+    const existing = await SettingsRepository.getCustomAttributeById(id);
+    if (!existing || existing.tenantId !== tenantId) {
+      appError("Custom attribute not found", ERROR_CODE.NOTFOUND, {
+        code: "CA02",
+      });
+    }
+
+    const attribute = await SettingsRepository.updateCustomAttribute(id, data);
+    return {
+      status: 200,
+      message: "Custom attribute updated",
+      data: attribute,
+    };
+  }
+
+  static async deleteCustomAttribute(
+    req: RequestComponents,
+  ): Promise<HandlerResult> {
+    const tenantId = req.meta.tenant.id;
+    const id = req.params.id;
+
+    const existing = await SettingsRepository.getCustomAttributeById(id);
+    if (!existing || existing.tenantId !== tenantId) {
+      appError("Custom attribute not found", ERROR_CODE.NOTFOUND, {
+        code: "CA03",
+      });
+    }
+
+    await SettingsRepository.deleteCustomAttribute(id);
+    return { status: 200, message: "Custom attribute deleted", data: null };
   }
 }

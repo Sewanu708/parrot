@@ -1,7 +1,20 @@
 import { db } from "@parrot/db/src/config";
-import { businessHours, businessHourExceptions, cannedResponses, permissions, rolePermissions } from "@parrot/db/src/schema";
+import {
+  businessHours,
+  businessHourExceptions,
+  cannedResponses,
+  customAttributes,
+  permissions,
+  rolePermissions,
+} from "@parrot/db/src/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
-import type { UpdateBusinessHoursConfigDto, CreateCannedResponseDto, UpdateCannedResponseDto } from "@parrot/sdk";
+import type {
+  UpdateBusinessHoursConfigDto,
+  CreateCannedResponseDto,
+  UpdateCannedResponseDto,
+  CreateCustomAttributeDto,
+  UpdateCustomAttributeDto,
+} from "@parrot/sdk";
 
 export class SettingsRepository {
   static async getBusinessHours(propertyId: string) {
@@ -156,5 +169,80 @@ export class SettingsRepository {
 
   static async deleteCannedResponse(id: string) {
     await db.delete(cannedResponses).where(eq(cannedResponses.id, id));
+  }
+
+  // --- Custom Attributes ---
+
+  static async getCustomAttributes(tenantId: string) {
+    return db
+      .select()
+      .from(customAttributes)
+      .where(eq(customAttributes.tenantId, tenantId))
+      .orderBy(customAttributes.createdAt);
+  }
+
+  static async getCustomAttributeById(id: string) {
+    const results = await db
+      .select()
+      .from(customAttributes)
+      .where(eq(customAttributes.id, id))
+      .limit(1);
+    return results[0] || null;
+  }
+
+  static async getCustomAttributeByKey(tenantId: string, key: string) {
+    const results = await db
+      .select()
+      .from(customAttributes)
+      .where(
+        and(
+          eq(customAttributes.tenantId, tenantId),
+          eq(customAttributes.key, key),
+        ),
+      )
+      .limit(1);
+    return results[0] || null;
+  }
+
+  static async createCustomAttribute(
+    tenantId: string,
+    data: CreateCustomAttributeDto,
+  ) {
+    const results = await db
+      .insert(customAttributes)
+      .values({
+        tenantId,
+        key: data.key,
+        label: data.label,
+        description: data.description,
+        type: data.type || "string",
+        defaultValue: data.defaultValue,
+      })
+      .returning();
+    return results[0];
+  }
+
+  static async updateCustomAttribute(
+    id: string,
+    data: UpdateCustomAttributeDto,
+  ) {
+    const payload: Partial<typeof customAttributes.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+    if (data.label !== undefined) payload.label = data.label;
+    if (data.description !== undefined) payload.description = data.description;
+    if (data.type !== undefined) payload.type = data.type;
+    if (data.defaultValue !== undefined) payload.defaultValue = data.defaultValue;
+
+    const results = await db
+      .update(customAttributes)
+      .set(payload)
+      .where(eq(customAttributes.id, id))
+      .returning();
+    return results[0];
+  }
+
+  static async deleteCustomAttribute(id: string) {
+    await db.delete(customAttributes).where(eq(customAttributes.id, id));
   }
 }
