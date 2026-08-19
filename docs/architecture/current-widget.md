@@ -29,7 +29,7 @@ flowchart LR
     end
 
     Host -->|1. Loads script tag| Core
-    Core -->|2. HTTP POST / Messages (Origin / JWT)| API
+    Core -->|"2. HTTP POST / Messages (Origin / JWT)"| API
     Core <-->|3. WS / Real-time events| WS
 ```
 
