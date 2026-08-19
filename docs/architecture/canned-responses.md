@@ -10,7 +10,7 @@ Transforms static text canned responses into a dynamic templating engine powered
 flowchart TD
     subgraph Admin["1. Attribute & Template Management"]
         Settings[Dashboard Settings] -->|Defines Custom Attributes| AttrDB[(custom_attributes)]
-        Settings -->|Creates Canned Responses with {{placeholders}}| CRDB[(canned_responses)]
+        Settings -->|"Creates Canned Responses with {{placeholders}}"| CRDB[(canned_responses)]
     end
 
     subgraph Developer["2. Developer & Widget Lifecycle"]
